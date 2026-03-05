@@ -11,5 +11,8 @@ export default defineConfig(() => {
   return {
     base,
     plugins: [vue()],
+    test: {
+      environment: 'jsdom',
+    },
   }
 })
