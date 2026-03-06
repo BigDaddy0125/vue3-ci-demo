@@ -1,17 +1,18 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Manrope:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
 :root {
-  --font-body: 'Space Grotesk', sans-serif;
+  --font-display: 'Sora', sans-serif;
+  --font-body: 'Manrope', sans-serif;
   --font-mono: 'IBM Plex Mono', monospace;
 
-  --color-bg: #f1f5f3;
-  --color-ink: #111715;
-  --color-muted: #365047;
-  --color-line: #b8c4bd;
+  --color-bg: #f5f7fa;
+  --color-ink: #0f172a;
+  --color-muted: #334155;
+  --color-line: #cbd5e1;
   --color-surface: rgba(255, 255, 255, 0.74);
-  --color-brand: #0f9f5d;
-  --color-brand-deep: #076c41;
-  --color-accent: #ff6f3d;
+  --color-brand: #0f766e;
+  --color-brand-deep: #115e59;
+  --color-accent: #d97706;
 
   --space-1: 0.25rem;
   --space-2: 0.5rem;

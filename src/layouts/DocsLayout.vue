@@ -29,6 +29,9 @@ const activeDoc = computed(() => docsContent[activeSlug.value])
     <main class="docs-layout">
       <aside class="card docs-nav reveal fade-up">
         <h2>Docs</h2>
+        <p class="docs-nav-copy">
+          Canonical references for constitutional guarantees, state semantics, and deployment.
+        </p>
         <nav>
           <RouterLink
             v-for="item in docsNav"
@@ -42,7 +45,15 @@ const activeDoc = computed(() => docsContent[activeSlug.value])
         </nav>
       </aside>
       <article class="card docs-content reveal fade-up">
-        <h1>{{ activeDoc.title }}</h1>
+        <header class="docs-hero">
+          <p class="tile-kicker">Document</p>
+          <h1>{{ activeDoc.title }}</h1>
+          <div class="docs-hero-meta">
+            <span class="chip">Authorization Infrastructure</span>
+            <span class="chip">No Prediction Claims</span>
+            <span class="chip">Auditability Required</span>
+          </div>
+        </header>
         <section v-for="section in activeDoc.sections" :key="section.heading" class="doc-section">
           <h3>{{ section.heading }}</h3>
           <p v-for="line in section.body" :key="line">{{ line }}</p>

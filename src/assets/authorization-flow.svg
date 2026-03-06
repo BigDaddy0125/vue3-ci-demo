@@ -1,0 +1,17 @@
+<svg width="640" height="320" viewBox="0 0 640 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="640" height="320" rx="20" fill="#F8FAFC"/>
+  <rect x="42" y="122" width="130" height="72" rx="12" fill="white" stroke="#CBD5E1"/>
+  <text x="107" y="166" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="14" fill="#334155">PROPOSAL</text>
+  <rect x="252" y="108" width="148" height="100" rx="14" fill="#ECFDF5" stroke="#0F766E" stroke-width="2"/>
+  <text x="326" y="166" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="14" fill="#0F766E">CLEARANCEGATE</text>
+  <rect x="478" y="72" width="122" height="42" rx="8" fill="#ECFDF5" stroke="#0F766E"/>
+  <rect x="478" y="126" width="122" height="42" rx="8" fill="#FFF7ED" stroke="#D97706"/>
+  <rect x="478" y="180" width="122" height="42" rx="8" fill="#F8FAFC" stroke="#94A3B8"/>
+  <text x="539" y="99" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="12" fill="#0F766E">PROCEED</text>
+  <text x="539" y="153" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="12" fill="#B45309">BLOCK</text>
+  <text x="539" y="207" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="#475569">REQUIRE_ACK / DEGRADE</text>
+  <path d="M176 158H238" stroke="#64748B" stroke-width="2"/>
+  <path d="M232 152L240 158L232 164" stroke="#64748B" stroke-width="2"/>
+  <path d="M404 158H468" stroke="#64748B" stroke-width="2"/>
+  <path d="M462 152L470 158L462 164" stroke="#64748B" stroke-width="2"/>
+</svg>

@@ -1,4 +1,6 @@
-<script setup>
+﻿<script setup>
+import { computed, ref } from 'vue'
+
 const states = [
   { id: 'INIT', x: 90, y: 130, kind: 'neutral' },
   { id: 'INFO_INSUFFICIENT', x: 290, y: 65, kind: 'risk' },
@@ -26,6 +28,12 @@ const transitions = [
 ]
 
 const byId = Object.fromEntries(states.map((s) => [s.id, s]))
+const activeState = ref(null)
+
+const isTransitionActive = (from, to) =>
+  activeState.value && (from === activeState.value || to === activeState.value)
+
+const hasActiveState = computed(() => Boolean(activeState.value))
 </script>
 
 <template>
@@ -35,6 +43,23 @@ const byId = Object.fromEntries(states.map((s) => [s.id, s]))
       <h2>Deterministic Authorization State Machine</h2>
     </div>
     <div class="card machine-wrap">
+      <div class="state-legend">
+        <button
+          v-for="state in states"
+          :key="state.id"
+          type="button"
+          class="state-pill"
+          :class="{ active: activeState === state.id }"
+          @mouseenter="activeState = state.id"
+          @focus="activeState = state.id"
+          @mouseleave="activeState = null"
+          @blur="activeState = null"
+          @click="activeState = activeState === state.id ? null : state.id"
+        >
+          {{ state.id }}
+        </button>
+      </div>
+
       <svg viewBox="0 0 640 265" class="machine-svg" role="img" aria-label="ClearanceGate authorization state machine">
         <defs>
           <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
@@ -45,6 +70,10 @@ const byId = Object.fromEntries(states.map((s) => [s.id, s]))
           <line
             v-for="(t, idx) in transitions"
             :key="`${t[0]}-${t[1]}`"
+            :class="{
+              active: isTransitionActive(t[0], t[1]),
+              muted: hasActiveState && !isTransitionActive(t[0], t[1]),
+            }"
             :x1="byId[t[0]].x + 50"
             :y1="byId[t[0]].y + 18"
             :x2="byId[t[1]].x - 12"
@@ -54,14 +83,25 @@ const byId = Object.fromEntries(states.map((s) => [s.id, s]))
           />
         </g>
         <g class="machine-nodes">
-          <g v-for="state in states" :key="state.id" :class="['machine-node', state.kind]">
+          <g
+            v-for="state in states"
+            :key="state.id"
+            :class="[
+              'machine-node',
+              state.kind,
+              { active: activeState === state.id, muted: hasActiveState && activeState !== state.id },
+            ]"
+          >
             <rect :x="state.x - 46" :y="state.y" rx="9" ry="9" width="98" height="36" />
             <text :x="state.x + 2" :y="state.y + 23">{{ state.id }}</text>
           </g>
         </g>
       </svg>
-      <p class="mono machine-note">Outcomes: AUTHORIZED→PROCEED · BLOCKED/INFO_INSUFFICIENT/RISK_FLAGGED→BLOCK · AWAITING_ACK→REQUIRE_ACK · DEGRADED→DEGRADE</p>
+
+      <p class="mono machine-note">
+        Outcomes: AUTHORIZED -> PROCEED | BLOCKED / INFO_INSUFFICIENT / RISK_FLAGGED -> BLOCK |
+        AWAITING_ACK -> REQUIRE_ACK | DEGRADED -> DEGRADE
+      </p>
     </div>
   </section>
 </template>
-
