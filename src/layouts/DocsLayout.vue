@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { docsContent, docsNav } from '../docs/nav'
 import { useReveal } from '../composables/useReveal'
+import { useSeo } from '../composables/useSeo'
 
 const route = useRoute()
 useReveal('.reveal')
@@ -13,6 +14,20 @@ const activeSlug = computed(() => {
 })
 
 const activeDoc = computed(() => docsContent[activeSlug.value])
+
+const docTitle = computed(() => activeDoc.value.title)
+const docDescription = computed(() => {
+  const lines = activeDoc.value.sections[0]?.body || []
+  return lines.join(' ').slice(0, 160)
+})
+const docPath = computed(() => `/docs/${activeSlug.value}`)
+
+useSeo({
+  title: docTitle,
+  description: docDescription,
+  path: docPath,
+  type: 'article',
+})
 </script>
 
 <template>

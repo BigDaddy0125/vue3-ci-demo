@@ -7,6 +7,7 @@ import StateMachine from '../components/StateMachine.vue'
 import VerificationSection from '../components/VerificationSection.vue'
 import { docsNav } from '../docs/nav'
 import { useReveal } from '../composables/useReveal'
+import { useSeo } from '../composables/useSeo'
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import authorizationFlow from '../assets/authorization-flow.svg'
 import auditEvidence from '../assets/audit-evidence.svg'
@@ -16,6 +17,13 @@ import usecaseItops from '../assets/usecase-itops.svg'
 import usecaseIndustrial from '../assets/usecase-industrial.svg'
 
 useReveal('.reveal')
+useSeo({
+  title: 'Deterministic Authorization Infrastructure',
+  description:
+    'ClearanceGate enforces deterministic authorization before execution with fail-closed behavior, explicit responsibility, and auditability by construction.',
+  path: '/',
+  type: 'website',
+})
 const scrollProgress = ref(0)
 
 const updateScrollProgress = () => {
