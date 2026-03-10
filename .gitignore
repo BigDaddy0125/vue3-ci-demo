@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local documentation and generated artifacts
+.github/skills/
+ClearanceGate Documentation/
+cg_restored.files/
+cg_restored.html
