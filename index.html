@@ -7,15 +7,22 @@
     <title>ClearanceGate</title>
     <script>
       (function (location) {
-        if (location.search[1] !== '/') return
-        const decoded = location.search
-          .slice(1)
-          .split('&')
-          .map(function (segment) {
-            return segment.replace(/~and~/g, '&')
-          })
-          .join('?')
-        window.history.replaceState(null, '', location.pathname.slice(0, -1) + decoded + location.hash)
+        if (location.search[1] === '/') {
+          const decoded = location.search
+            .slice(1)
+            .split('&')
+            .map(function (segment) {
+              return segment.replace(/~and~/g, '&')
+            })
+            .join('?')
+          window.history.replaceState(null, '', location.pathname.slice(0, -1) + decoded + location.hash)
+          return
+        }
+
+        if (location.hash && location.hash.startsWith('#/')) {
+          const normalizedPath = location.pathname === '/' ? '' : location.pathname.replace(/\/$/, '')
+          window.history.replaceState(null, '', normalizedPath + location.hash.slice(1))
+        }
       })(window.location)
     </script>
   </head>
