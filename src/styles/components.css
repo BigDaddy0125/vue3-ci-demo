@@ -656,6 +656,11 @@ h3 {
 }
 
 .reveal {
+  opacity: 1;
+  transform: none;
+}
+
+.reveal-enabled .reveal {
   opacity: 0;
   transition:
     opacity 700ms ease,
@@ -663,11 +668,11 @@ h3 {
   transition-delay: var(--reveal-delay, 0ms);
 }
 
-.reveal.fade-in {
+.reveal-enabled .reveal.fade-in {
   transform: scale(0.98);
 }
 
-.reveal.is-visible {
+.reveal-enabled .reveal.is-visible {
   opacity: 1;
   transform: translateY(0) scale(1);
 }

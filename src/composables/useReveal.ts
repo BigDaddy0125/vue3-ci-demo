@@ -10,19 +10,28 @@ export function useReveal(selector = '.reveal', options: RevealOptions = {}) {
 
   onMounted(() => {
     const nodes = Array.from(document.querySelectorAll<HTMLElement>(selector))
+    if (!nodes.length) {
+      return
+    }
+
+    const root = document.documentElement
     const reduced =
       typeof window.matchMedia === 'function' &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
     if (reduced) {
+      root.classList.remove('reveal-enabled')
       nodes.forEach((el) => el.classList.add('is-visible'))
       return
     }
 
     if (typeof IntersectionObserver === 'undefined') {
+      root.classList.remove('reveal-enabled')
       nodes.forEach((el) => el.classList.add('is-visible'))
       return
     }
+
+    root.classList.add('reveal-enabled')
 
     observer = new IntersectionObserver(
       (entries) => {
@@ -45,5 +54,6 @@ export function useReveal(selector = '.reveal', options: RevealOptions = {}) {
   onBeforeUnmount(() => {
     observer?.disconnect()
     observer = null
+    document.documentElement.classList.remove('reveal-enabled')
   })
 }
