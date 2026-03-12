@@ -7,6 +7,23 @@ type RevealOptions = {
 
 export function useReveal(selector = '.reveal', options: RevealOptions = {}) {
   let observer: IntersectionObserver | null = null
+  let mutationObserver: MutationObserver | null = null
+
+  const visible = new WeakSet<Element>()
+
+  const markVisible = (el: Element) => {
+    el.classList.add('is-visible')
+    visible.add(el)
+  }
+
+  const observeNodes = (nodes: HTMLElement[]) => {
+    nodes.forEach((el) => {
+      if (visible.has(el) || el.classList.contains('is-visible')) {
+        return
+      }
+      observer?.observe(el)
+    })
+  }
 
   onMounted(() => {
     const nodes = Array.from(document.querySelectorAll<HTMLElement>(selector))
@@ -21,13 +38,13 @@ export function useReveal(selector = '.reveal', options: RevealOptions = {}) {
 
     if (reduced) {
       root.classList.remove('reveal-enabled')
-      nodes.forEach((el) => el.classList.add('is-visible'))
+      nodes.forEach((el) => markVisible(el))
       return
     }
 
     if (typeof IntersectionObserver === 'undefined') {
       root.classList.remove('reveal-enabled')
-      nodes.forEach((el) => el.classList.add('is-visible'))
+      nodes.forEach((el) => markVisible(el))
       return
     }
 
@@ -37,7 +54,7 @@ export function useReveal(selector = '.reveal', options: RevealOptions = {}) {
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            entry.target.classList.add('is-visible')
+            markVisible(entry.target)
             observer?.unobserve(entry.target)
           }
         })
@@ -48,12 +65,24 @@ export function useReveal(selector = '.reveal', options: RevealOptions = {}) {
       },
     )
 
-    nodes.forEach((el) => observer?.observe(el))
+    observeNodes(nodes)
+
+    mutationObserver = new MutationObserver(() => {
+      const next = Array.from(document.querySelectorAll<HTMLElement>(selector))
+      observeNodes(next)
+    })
+
+    mutationObserver.observe(document.body, {
+      childList: true,
+      subtree: true,
+    })
   })
 
   onBeforeUnmount(() => {
     observer?.disconnect()
     observer = null
+    mutationObserver?.disconnect()
+    mutationObserver = null
     document.documentElement.classList.remove('reveal-enabled')
   })
 }

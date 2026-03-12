@@ -19,6 +19,11 @@ body {
     var(--color-bg);
 }
 
+html[lang='ja'] body {
+  font-feature-settings: 'palt' 1;
+  text-rendering: optimizeLegibility;
+}
+
 a {
   color: inherit;
 }

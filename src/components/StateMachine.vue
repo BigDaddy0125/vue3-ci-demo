@@ -1,107 +1,128 @@
 ﻿<script setup>
 import { computed, ref } from 'vue'
+import { useLocale } from '../composables/useLocale'
 
-const states = [
-  { id: 'INIT', x: 90, y: 130, kind: 'neutral' },
-  { id: 'INFO_INSUFFICIENT', x: 290, y: 65, kind: 'risk' },
-  { id: 'RISK_FLAGGED', x: 290, y: 130, kind: 'risk' },
-  { id: 'AWAITING_ACK', x: 290, y: 195, kind: 'risk' },
-  { id: 'AUTHORIZED', x: 520, y: 65, kind: 'good' },
-  { id: 'BLOCKED', x: 520, y: 130, kind: 'bad' },
-  { id: 'DEGRADED', x: 520, y: 195, kind: 'warn' },
+const { locale } = useLocale()
+const activeState = ref('INIT')
+
+const stateRows = [
+  { id: 'INIT', lane: 'entry', outcome: 'BLOCK_OR_ROUTE' },
+  { id: 'INFO_INSUFFICIENT', lane: 'risk', outcome: 'BLOCK' },
+  { id: 'RISK_FLAGGED', lane: 'risk', outcome: 'BLOCK' },
+  { id: 'AWAITING_ACK', lane: 'review', outcome: 'REQUIRE_ACK' },
+  { id: 'AUTHORIZED', lane: 'terminal', outcome: 'PROCEED' },
+  { id: 'BLOCKED', lane: 'terminal', outcome: 'BLOCK' },
+  { id: 'DEGRADED', lane: 'terminal', outcome: 'DEGRADE' },
 ]
 
-const transitions = [
-  ['INIT', 'INFO_INSUFFICIENT'],
-  ['INIT', 'RISK_FLAGGED'],
-  ['INIT', 'AUTHORIZED'],
-  ['INIT', 'DEGRADED'],
-  ['INFO_INSUFFICIENT', 'BLOCKED'],
-  ['INFO_INSUFFICIENT', 'DEGRADED'],
-  ['RISK_FLAGGED', 'AWAITING_ACK'],
-  ['RISK_FLAGGED', 'BLOCKED'],
-  ['RISK_FLAGGED', 'DEGRADED'],
-  ['AWAITING_ACK', 'AUTHORIZED'],
-  ['AWAITING_ACK', 'BLOCKED'],
-  ['AWAITING_ACK', 'DEGRADED'],
-  ['DEGRADED', 'BLOCKED'],
-]
+const laneOrder = ['entry', 'risk', 'review', 'terminal']
 
-const byId = Object.fromEntries(states.map((s) => [s.id, s]))
-const activeState = ref(null)
+const laneRows = computed(() => {
+  const groups = Object.fromEntries(laneOrder.map((lane) => [lane, []]))
+  for (const row of stateRows) {
+    groups[row.lane].push(row)
+  }
+  return groups
+})
 
-const isTransitionActive = (from, to) =>
-  activeState.value && (from === activeState.value || to === activeState.value)
+const outcomeTone = {
+  PROCEED: 'good',
+  BLOCK: 'bad',
+  REQUIRE_ACK: 'warn',
+  DEGRADE: 'muted',
+  BLOCK_OR_ROUTE: 'muted',
+}
 
-const hasActiveState = computed(() => Boolean(activeState.value))
+const copy = computed(() => {
+  if (locale.value === 'ja') {
+    return {
+      eyebrow: '状態機械',
+      title: '認可フロー（整形ビュー）',
+      subtitle: '交差線図ではなく、状態群と結果マッピングを分離して表示',
+      lanes: {
+        entry: '入力状態',
+        risk: 'リスク評価状態',
+        review: '責任確認状態',
+        terminal: '終端状態',
+      },
+      outcomeLabel: '結果',
+      outcomes: {
+        PROCEED: 'PROCEED',
+        BLOCK: 'BLOCK',
+        REQUIRE_ACK: 'REQUIRE_ACK',
+        DEGRADE: 'DEGRADE',
+        BLOCK_OR_ROUTE: 'BLOCK / 追加判定',
+      },
+      notes: [
+        'AUTHORIZED -> PROCEED',
+        'INFO_INSUFFICIENT / RISK_FLAGGED / BLOCKED -> BLOCK',
+        'AWAITING_ACK -> REQUIRE_ACK',
+        'DEGRADED -> DEGRADE',
+      ],
+    }
+  }
+
+  return {
+    eyebrow: 'State Machine',
+    title: 'Authorization Flow (Structured View)',
+    subtitle: 'State lanes and outcome mapping, without crossing lines.',
+    lanes: {
+      entry: 'Entry State',
+      risk: 'Risk Evaluation States',
+      review: 'Responsibility Review State',
+      terminal: 'Terminal States',
+    },
+    outcomeLabel: 'Outcome',
+    outcomes: {
+      PROCEED: 'PROCEED',
+      BLOCK: 'BLOCK',
+      REQUIRE_ACK: 'REQUIRE_ACK',
+      DEGRADE: 'DEGRADE',
+      BLOCK_OR_ROUTE: 'BLOCK / Route Further',
+    },
+    notes: [
+      'AUTHORIZED -> PROCEED',
+      'INFO_INSUFFICIENT / RISK_FLAGGED / BLOCKED -> BLOCK',
+      'AWAITING_ACK -> REQUIRE_ACK',
+      'DEGRADED -> DEGRADE',
+    ],
+  }
+})
 </script>
 
 <template>
   <section class="section reveal fade-up">
     <div class="section-head">
-      <p class="eyebrow">State Machine</p>
-      <h2>Deterministic Authorization State Machine</h2>
+      <p class="eyebrow">{{ copy.eyebrow }}</p>
+      <h2>{{ copy.title }}</h2>
+      <p class="machine-subtitle">{{ copy.subtitle }}</p>
     </div>
-    <div class="card machine-wrap">
-      <div class="state-legend">
-        <button
-          v-for="state in states"
-          :key="state.id"
-          type="button"
-          class="state-pill"
-          :class="{ active: activeState === state.id }"
-          @mouseenter="activeState = state.id"
-          @focus="activeState = state.id"
-          @mouseleave="activeState = null"
-          @blur="activeState = null"
-          @click="activeState = activeState === state.id ? null : state.id"
-        >
-          {{ state.id }}
-        </button>
+
+    <div class="card machine-structured">
+      <div v-for="lane in laneOrder" :key="lane" class="machine-lane">
+        <p class="tile-kicker machine-lane-title">{{ copy.lanes[lane] }}</p>
+        <div class="machine-lane-grid">
+          <button
+            v-for="row in laneRows[lane]"
+            :key="row.id"
+            type="button"
+            class="machine-state-chip"
+            :class="{ active: activeState === row.id }"
+            @click="activeState = row.id"
+          >
+            <span class="mono">{{ row.id }}</span>
+            <span class="machine-arrow">-></span>
+            <span class="machine-outcome" :class="outcomeTone[row.outcome]">{{ copy.outcomes[row.outcome] }}</span>
+          </button>
+        </div>
       </div>
 
-      <svg viewBox="0 0 640 265" class="machine-svg" role="img" aria-label="ClearanceGate authorization state machine">
-        <defs>
-          <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
-            <path d="M0,0 L8,4 L0,8 z" fill="currentColor" />
-          </marker>
-        </defs>
-        <g class="machine-links">
-          <line
-            v-for="(t, idx) in transitions"
-            :key="`${t[0]}-${t[1]}`"
-            :class="{
-              active: isTransitionActive(t[0], t[1]),
-              muted: hasActiveState && !isTransitionActive(t[0], t[1]),
-            }"
-            :x1="byId[t[0]].x + 50"
-            :y1="byId[t[0]].y + 18"
-            :x2="byId[t[1]].x - 12"
-            :y2="byId[t[1]].y + 18"
-            :style="{ '--delay': `${idx * 90}ms` }"
-            marker-end="url(#arrow)"
-          />
-        </g>
-        <g class="machine-nodes">
-          <g
-            v-for="state in states"
-            :key="state.id"
-            :class="[
-              'machine-node',
-              state.kind,
-              { active: activeState === state.id, muted: hasActiveState && activeState !== state.id },
-            ]"
-          >
-            <rect :x="state.x - 46" :y="state.y" rx="9" ry="9" width="98" height="36" />
-            <text :x="state.x + 2" :y="state.y + 23">{{ state.id }}</text>
-          </g>
-        </g>
-      </svg>
-
-      <p class="mono machine-note">
-        Outcomes: AUTHORIZED -> PROCEED | BLOCKED / INFO_INSUFFICIENT / RISK_FLAGGED -> BLOCK |
-        AWAITING_ACK -> REQUIRE_ACK | DEGRADED -> DEGRADE
-      </p>
+      <div class="machine-notes">
+        <p class="tile-kicker">{{ copy.outcomeLabel }}</p>
+        <ul>
+          <li v-for="note in copy.notes" :key="note" class="mono">{{ note }}</li>
+        </ul>
+      </div>
     </div>
   </section>
 </template>

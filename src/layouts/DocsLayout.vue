@@ -1,19 +1,27 @@
-<script setup>
+﻿<script setup>
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { docsContent, docsNav } from '../docs/nav'
+import { getDocsForLocale } from '../docs/nav'
+import { useLocale } from '../composables/useLocale'
 import { useReveal } from '../composables/useReveal'
 import { useSeo } from '../composables/useSeo'
 
 const route = useRoute()
+const { locale, setLocale } = useLocale()
+
 useReveal('.reveal')
 
+const localizedDocs = computed(() => getDocsForLocale(locale.value))
+const docsNav = computed(() => localizedDocs.value.nav)
+const docsContent = computed(() => localizedDocs.value.content)
+
 const activeSlug = computed(() => {
-  const slug = String(route.params.slug || docsNav[0].slug)
-  return docsContent[slug] ? slug : docsNav[0].slug
+  const first = docsNav.value[0]?.slug || 'constitution'
+  const slug = String(route.params.slug || first)
+  return docsContent.value[slug] ? slug : first
 })
 
-const activeDoc = computed(() => docsContent[activeSlug.value])
+const activeDoc = computed(() => docsContent.value[activeSlug.value])
 
 const docTitle = computed(() => activeDoc.value.title)
 const docDescription = computed(() => {
@@ -28,6 +36,26 @@ useSeo({
   path: docPath,
   type: 'article',
 })
+
+const copy = computed(() => {
+  if (locale.value === 'ja') {
+    return {
+      badge: 'ドキュメント',
+      docs: '資料',
+      intro: 'システム憲章、状態意味論、導入運用を定義する基準ドキュメント。',
+      document: '文書',
+      chips: ['認可インフラ', '予測は非対象', '監査証跡は必須'],
+    }
+  }
+
+  return {
+    badge: 'Documentation',
+    docs: 'Docs',
+    intro: 'Canonical references for constitutional guarantees, state semantics, and deployment.',
+    document: 'Document',
+    chips: ['Authorization Infrastructure', 'No Prediction Claims', 'Auditability Required'],
+  }
+})
 </script>
 
 <template>
@@ -38,15 +66,19 @@ useSeo({
 
     <header class="topbar reveal fade-in">
       <RouterLink class="brand-link" :to="{ name: 'home' }">ClearanceGate</RouterLink>
-      <span class="eyebrow">Documentation</span>
+      <div class="top-nav">
+        <span class="eyebrow">{{ copy.badge }}</span>
+        <div class="lang-switch" role="group" aria-label="Language">
+          <button class="lang-btn" :class="{ active: locale === 'en' }" @click="setLocale('en')">EN</button>
+          <button class="lang-btn" :class="{ active: locale === 'ja' }" @click="setLocale('ja')">日本語</button>
+        </div>
+      </div>
     </header>
 
     <main class="docs-layout">
       <aside class="card docs-nav reveal fade-up">
-        <h2>Docs</h2>
-        <p class="docs-nav-copy">
-          Canonical references for constitutional guarantees, state semantics, and deployment.
-        </p>
+        <h2>{{ copy.docs }}</h2>
+        <p class="docs-nav-copy">{{ copy.intro }}</p>
         <nav>
           <RouterLink
             v-for="item in docsNav"
@@ -61,12 +93,10 @@ useSeo({
       </aside>
       <article class="card docs-content reveal fade-up">
         <header class="docs-hero">
-          <p class="tile-kicker">Document</p>
+          <p class="tile-kicker">{{ copy.document }}</p>
           <h1>{{ activeDoc.title }}</h1>
           <div class="docs-hero-meta">
-            <span class="chip">Authorization Infrastructure</span>
-            <span class="chip">No Prediction Claims</span>
-            <span class="chip">Auditability Required</span>
+            <span v-for="chip in copy.chips" :key="chip" class="chip">{{ chip }}</span>
           </div>
         </header>
         <section v-for="section in activeDoc.sections" :key="section.heading" class="doc-section">
