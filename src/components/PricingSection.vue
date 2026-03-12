@@ -56,7 +56,7 @@ const copy = computed(() => {
 </script>
 
 <template>
-  <section class="section reveal fade-up">
+  <section id="pricing-core" class="section section-tone-pricing reveal fade-up">
     <div class="section-head">
       <p class="eyebrow">{{ copy.eyebrow }}</p>
       <h2>{{ copy.title }}</h2>
@@ -69,7 +69,7 @@ const copy = computed(() => {
       <div class="flow-step">{{ copy.flow[2] }}</div>
     </div>
     <div class="three-grid compact-grid">
-      <article v-for="item in copy.cards" :key="item.title" class="card">
+      <article v-for="(item, idx) in copy.cards" :key="item.title" class="card" :class="idx % 2 === 0 ? 'card-tint-amber' : 'card-tint-slate'">
         <p class="tile-kicker">{{ item.kicker }}</p>
         <h3>{{ item.title }}</h3>
         <p>{{ item.body }}</p>

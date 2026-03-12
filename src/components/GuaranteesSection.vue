@@ -40,44 +40,52 @@ const copy = computed(() => {
     return {
       eyebrow: 'コア',
       title: '中核保証',
-      guaranteed: '保証',
+      guaranteed: 'Invariant',
       nonClaims: '明示的な非保証',
+      lead: '実行境界で妥協しない 4 つの不変条件',
     }
   }
 
   return {
     eyebrow: 'Core',
     title: 'Core Guarantees',
-    guaranteed: 'Guaranteed',
+    guaranteed: 'Invariant',
     nonClaims: 'Explicit Non-Claims',
+    lead: 'Four non-negotiable invariants at the execution boundary',
   }
 })
 </script>
 
 <template>
-  <section id="core-guarantees" class="section reveal fade-up">
+  <section id="core-guarantees" class="section section-tone-guarantees reveal fade-up guarantee-section">
     <div class="section-head">
       <p class="eyebrow">{{ copy.eyebrow }}</p>
       <h2>{{ copy.title }}</h2>
     </div>
-    <div class="three-grid compact-grid">
+    <div class="card card-tint-teal guarantee-lead reveal fade-in">
+      <p class="tile-kicker">{{ copy.guaranteed }}</p>
+      <h3>{{ copy.lead }}</h3>
+    </div>
+    <div class="guarantee-grid">
       <article
         v-for="(item, idx) in guarantees"
         :key="item.label"
-        class="card guarantee-tile reveal fade-up"
+        class="card card-tint-teal guarantee-strong reveal fade-up"
+        :class="`tone-${idx + 1}`"
         :style="{ '--reveal-delay': `${idx * 70}ms` }"
       >
+        <p class="guarantee-index mono">0{{ idx + 1 }}</p>
         <p class="tile-kicker">{{ copy.guaranteed }}</p>
         <h3>{{ item.label }}</h3>
         <p>{{ item.note }}</p>
       </article>
-      <article class="card reveal fade-in non-claims">
-        <h3>{{ copy.nonClaims }}</h3>
-        <ul>
-          <li v-for="item in nonClaims" :key="item">{{ item }}</li>
-        </ul>
-      </article>
     </div>
+    <article class="card card-tint-amber reveal fade-in guarantee-nonclaims">
+      <h3>{{ copy.nonClaims }}</h3>
+      <div class="chip-list">
+        <span v-for="item in nonClaims" :key="item" class="chip chip-muted">{{ item }}</span>
+      </div>
+    </article>
   </section>
 </template>
 

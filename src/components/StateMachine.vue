@@ -91,14 +91,14 @@ const copy = computed(() => {
 </script>
 
 <template>
-  <section class="section reveal fade-up">
+  <section id="state-machine" class="section section-tone-machine reveal fade-up">
     <div class="section-head">
       <p class="eyebrow">{{ copy.eyebrow }}</p>
       <h2>{{ copy.title }}</h2>
       <p class="machine-subtitle">{{ copy.subtitle }}</p>
     </div>
 
-    <div class="card machine-structured">
+    <div class="card card-tint-blue machine-structured">
       <div v-for="lane in laneOrder" :key="lane" class="machine-lane">
         <p class="tile-kicker machine-lane-title">{{ copy.lanes[lane] }}</p>
         <div class="machine-lane-grid">

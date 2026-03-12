@@ -1,17 +1,39 @@
 ﻿<script setup>
-import { computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { computed, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { getDocsForLocale } from '../docs/nav'
 import { useLocale } from '../composables/useLocale'
 import { useReveal } from '../composables/useReveal'
 import { useSeo } from '../composables/useSeo'
 
 const route = useRoute()
+const router = useRouter()
 const { locale, setLocale } = useLocale()
 
 useReveal('.reveal')
 
-const localizedDocs = computed(() => getDocsForLocale(locale.value))
+const activeLocale = computed(() => {
+  const fromRoute = String(route.params.locale || '')
+  return fromRoute === 'ja' || fromRoute === 'en' ? fromRoute : locale.value
+})
+
+watch(
+  () => route.params.locale,
+  (next) => {
+    const value = String(next || '')
+    if (value === 'ja' || value === 'en') {
+      setLocale(value)
+    }
+  },
+  { immediate: true },
+)
+
+const switchLocale = (nextLocale) => {
+  setLocale(nextLocale)
+  router.push({ name: 'doc', params: { locale: nextLocale, slug: activeSlug.value } })
+}
+
+const localizedDocs = computed(() => getDocsForLocale(activeLocale.value))
 const docsNav = computed(() => localizedDocs.value.nav)
 const docsContent = computed(() => localizedDocs.value.content)
 
@@ -28,7 +50,7 @@ const docDescription = computed(() => {
   const lines = activeDoc.value.sections[0]?.body || []
   return lines.join(' ').slice(0, 160)
 })
-const docPath = computed(() => `/docs/${activeSlug.value}`)
+const docPath = computed(() => `/${activeLocale.value}/docs/${activeSlug.value}`)
 
 useSeo({
   title: docTitle,
@@ -38,7 +60,7 @@ useSeo({
 })
 
 const copy = computed(() => {
-  if (locale.value === 'ja') {
+  if (activeLocale.value === 'ja') {
     return {
       badge: 'ドキュメント',
       docs: '資料',
@@ -65,12 +87,12 @@ const copy = computed(() => {
     <div class="bg-orb orb-b" aria-hidden="true"></div>
 
     <header class="topbar reveal fade-in">
-      <RouterLink class="brand-link" :to="{ name: 'home' }">ClearanceGate</RouterLink>
+      <RouterLink class="brand-link" :to="{ name: 'home', params: { locale: activeLocale } }">ClearanceGate</RouterLink>
       <div class="top-nav">
         <span class="eyebrow">{{ copy.badge }}</span>
         <div class="lang-switch" role="group" aria-label="Language">
-          <button class="lang-btn" :class="{ active: locale === 'en' }" @click="setLocale('en')">EN</button>
-          <button class="lang-btn" :class="{ active: locale === 'ja' }" @click="setLocale('ja')">日本語</button>
+          <button class="lang-btn" :class="{ active: activeLocale === 'en' }" @click="switchLocale('en')">EN</button>
+          <button class="lang-btn" :class="{ active: activeLocale === 'ja' }" @click="switchLocale('ja')">日本語</button>
         </div>
       </div>
     </header>
@@ -85,7 +107,7 @@ const copy = computed(() => {
             :key="item.slug"
             class="docs-link"
             :class="{ active: activeSlug === item.slug }"
-            :to="{ name: 'doc', params: { slug: item.slug } }"
+            :to="{ name: 'doc', params: { locale: activeLocale, slug: item.slug } }"
           >
             {{ item.title }}
           </RouterLink>
@@ -107,4 +129,3 @@ const copy = computed(() => {
     </main>
   </div>
 </template>
-

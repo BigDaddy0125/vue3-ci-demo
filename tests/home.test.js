@@ -1,6 +1,11 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import Home from '../src/pages/Home.vue'
+
+vi.mock('vue-router', () => ({
+  useRoute: () => ({ params: { locale: 'en' } }),
+  useRouter: () => ({ push: vi.fn() }),
+}))
 
 describe('Home page', () => {
   it('renders core homepage copy', () => {

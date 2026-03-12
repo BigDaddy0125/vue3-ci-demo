@@ -48,6 +48,27 @@ function upsertCanonical(url: string) {
   el.setAttribute('href', url)
 }
 
+function upsertAlternate(hreflang: string, href: string) {
+  let el = document.head.querySelector(`link[rel="alternate"][hreflang="${hreflang}"]`) as HTMLLinkElement | null
+  if (!el) {
+    el = document.createElement('link')
+    el.setAttribute('rel', 'alternate')
+    el.setAttribute('hreflang', hreflang)
+    document.head.appendChild(el)
+  }
+  el.setAttribute('href', href)
+}
+
+function upsertLocaleAlternates(normalizedPath: string) {
+  const localeMatch = normalizedPath.match(/^\/(en|ja)(\/.*)?$/)
+  const suffix = localeMatch ? localeMatch[2] || '' : normalizedPath
+  const enPath = `/en${suffix}`
+  const jaPath = `/ja${suffix}`
+  upsertAlternate('en', `${SITE_URL}${enPath}`)
+  upsertAlternate('ja', `${SITE_URL}${jaPath}`)
+  upsertAlternate('x-default', `${SITE_URL}${enPath}`)
+}
+
 export function useSeo(input: SeoInput) {
   const apply = () => {
     const title = asValue(input.title)
@@ -60,6 +81,7 @@ export function useSeo(input: SeoInput) {
 
     document.title = fullTitle
     upsertCanonical(canonicalUrl)
+    upsertLocaleAlternates(normalizedPath)
 
     upsertMetaByName('description', description)
     upsertMetaByName('robots', 'index, follow')
@@ -84,4 +106,3 @@ export function useSeo(input: SeoInput) {
     )
   })
 }
-
