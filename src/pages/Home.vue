@@ -211,6 +211,11 @@ const copy = computed(() => {
         primary: 'Start Pilot',
         secondary: 'Read Docs',
       },
+      affiliation: {
+        title: '運営主体',
+        text: 'ClearanceGate は 石竹株式会社（Ishitake Co., Ltd.）が企画・開発・運営しています。',
+        link: '石竹株式会社 公式サイト',
+      },
     }
   }
 
@@ -323,6 +328,11 @@ const copy = computed(() => {
       title: 'Run A Narrow-Scope Pilot First',
       primary: 'Start Pilot',
       secondary: 'Read Docs',
+    },
+    affiliation: {
+      title: 'Operated by',
+      text: 'ClearanceGate is planned, developed, and operated by Ishitake Co., Ltd.',
+      link: 'Visit Ishitake Corporate Site',
     },
   }
 })
@@ -510,5 +520,13 @@ watch(
         </div>
       </section>
     </main>
+
+    <footer class="site-footnote reveal fade-up">
+      <div class="site-footnote-copy">
+        <p class="site-footnote-title">{{ copy.affiliation.title }}</p>
+        <p>{{ copy.affiliation.text }}</p>
+      </div>
+      <a class="site-footnote-link" href="https://ishitakes.com/" target="_blank" rel="noopener noreferrer">{{ copy.affiliation.link }}</a>
+    </footer>
   </div>
 </template>

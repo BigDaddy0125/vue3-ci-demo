@@ -5,6 +5,55 @@
   padding: var(--space-4) 0 var(--space-7);
 }
 
+.site-footnote {
+  margin-top: var(--space-6);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid rgba(30, 41, 59, 0.16);
+  border-radius: var(--radius-md);
+  background:
+    linear-gradient(135deg, rgba(15, 118, 110, 0.1), rgba(30, 41, 59, 0.08)),
+    rgba(255, 255, 255, 0.9);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.site-footnote-copy {
+  min-width: 260px;
+}
+
+.site-footnote-title {
+  margin: 0 0 0.2rem;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.72rem;
+  color: var(--color-brand-deep);
+}
+
+.site-footnote p {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.92rem;
+}
+
+.site-footnote-link {
+  text-decoration: none;
+  color: #f8fffd;
+  font-weight: 600;
+  border: 1px solid rgba(15, 118, 110, 0.28);
+  border-radius: 999px;
+  padding: 0.44rem 0.84rem;
+  background: linear-gradient(145deg, #0f766e, #0f172a);
+  white-space: nowrap;
+}
+
+.site-footnote-link:hover {
+  transform: translateY(-1px);
+}
+
 .scroll-progress {
   position: fixed;
   top: 0;
@@ -1402,6 +1451,10 @@ h3 {
 
   .docs-steps {
     grid-template-columns: 1fr;
+  }
+
+  .site-footnote {
+    padding: var(--space-3);
   }
 }
 

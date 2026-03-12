@@ -67,6 +67,11 @@ const copy = computed(() => {
       intro: 'システム憲章、状態意味論、導入運用を定義する基準ドキュメント。',
       document: '文書',
       chips: ['認可インフラ', '予測は非対象', '監査証跡は必須'],
+      affiliation: {
+        title: '運営主体',
+        text: 'ClearanceGate は 石竹株式会社（Ishitake Co., Ltd.）が企画・開発・運営しています。',
+        link: '石竹株式会社 公式サイト',
+      },
     }
   }
 
@@ -76,6 +81,11 @@ const copy = computed(() => {
     intro: 'Canonical references for constitutional guarantees, state semantics, and deployment.',
     document: 'Document',
     chips: ['Authorization Infrastructure', 'No Prediction Claims', 'Auditability Required'],
+    affiliation: {
+      title: 'Operated by',
+      text: 'ClearanceGate is planned, developed, and operated by Ishitake Co., Ltd.',
+      link: 'Visit Ishitake Corporate Site',
+    },
   }
 })
 </script>
@@ -127,5 +137,13 @@ const copy = computed(() => {
         </section>
       </article>
     </main>
+
+    <footer class="site-footnote reveal fade-up">
+      <div class="site-footnote-copy">
+        <p class="site-footnote-title">{{ copy.affiliation.title }}</p>
+        <p>{{ copy.affiliation.text }}</p>
+      </div>
+      <a class="site-footnote-link" href="https://ishitakes.com/" target="_blank" rel="noopener noreferrer">{{ copy.affiliation.link }}</a>
+    </footer>
   </div>
 </template>
