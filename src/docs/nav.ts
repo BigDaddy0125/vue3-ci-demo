@@ -1,666 +1,710 @@
-﻿const docsCatalog = {
-  en: {
-    nav: [
-      { slug: 'executive-summary', title: 'Executive Summary' },
-      { slug: 'constitution', title: 'System Constitution' },
-      { slug: 'state-machine', title: 'State Machine & Invariants' },
-      { slug: 'formal-verification', title: 'Formal Verification Scope' },
-      { slug: 'architecture', title: 'Technical Architecture' },
-      { slug: 'api', title: 'API Documentation' },
-      { slug: 'pilot-plan', title: 'POC Pilot Plan' },
-      { slug: 'enterprise-guide', title: 'Enterprise Implementation Guide' },
-      { slug: 'security', title: 'Security Compliance Report' },
-      { slug: 'roadmap', title: 'Product Roadmap' },
-      { slug: 'personas', title: 'User Personas' },
-      { slug: 'pricing', title: 'Pricing Logic' },
+export type DocSection = {
+  heading: string
+  body: string[]
+}
+
+export type DocTrack = 'Core' | 'Engineering' | 'Operations' | 'Business'
+
+export type DocStatus = 'Draft' | 'In Progress' | 'Pilot Ready' | 'Published'
+
+export type DocEntry = {
+  title: string
+  summary: string
+  track: DocTrack
+  status: DocStatus
+  audience: string[]
+  confidentiality: 'Public' | 'Internal'
+  lastUpdated: string
+  source: string
+  sections: DocSection[]
+}
+
+type DocsContent = Record<string, DocEntry>
+
+type DocsCatalog = {
+  nav: Array<{ slug: string; title: string }>
+  content: DocsContent
+}
+
+export const docsOrder = [
+  'executive-summary',
+  'constitution',
+  'state-machine',
+  'formal-verification',
+  'architecture',
+  'api',
+  'pilot-plan',
+  'enterprise-guide',
+  'security',
+  'roadmap',
+  'personas',
+  'pricing',
+  'market-opportunity',
+  'competitive-landscape',
+  'financial-projections',
+  'pitch-deck',
+] as const
+
+const enContent: DocsContent = {
+  'executive-summary': {
+    title: 'ClearanceGate Executive Summary',
+    summary: 'Why authorization becomes the control surface as decision generation gets cheaper and faster.',
+    track: 'Core',
+    status: 'Published',
+    audience: ['Leadership', 'Investors', 'Partners'],
+    confidentiality: 'Public',
+    lastUpdated: '2026-01-15',
+    source: 'https://www.notion.so/2e9adcdd14e180298f82e9a463523b28',
+    sections: [
+      {
+        heading: 'Strategic Problem',
+        body: [
+          'High-risk execution is increasingly automated while authorization remains fragmented and implicit.',
+          'After incidents, organizations still struggle to explain why execution was allowed and who held responsibility.',
+        ],
+      },
+      {
+        heading: 'Product Position',
+        body: [
+          'ClearanceGate is a formal authorization boundary between decision proposal and execution.',
+          'Each request resolves to exactly one outcome: PROCEED, BLOCK, REQUIRE_ACK, or DEGRADE.',
+        ],
+      },
+      {
+        heading: 'System Guarantees',
+        body: [
+          'Fail-closed behavior under uncertainty or internal failure.',
+          'Auditability and responsibility binding are enforced as system-level invariants.',
+        ],
+      },
+      {
+        heading: 'Non-Claims',
+        body: [
+          'ClearanceGate does not guarantee decision correctness, model quality, or business outcome optimality.',
+          'It guarantees execution defensibility under explicit constraints.',
+        ],
+      },
     ],
-    content: {
-      'executive-summary': {
-        title: 'ClearanceGate Executive Summary',
-        sections: [
-          {
-            heading: 'Problem',
-            body: [
-              'Critical actions are increasingly automated, but authorization is still implicit in many organizations.',
-              'When incidents happen, responsibility and rationale are reconstructed after the fact instead of enforced before execution.',
-            ],
-          },
-          {
-            heading: 'Solution',
-            body: [
-              'ClearanceGate inserts a deterministic authorization boundary between decision proposal and execution.',
-              'Every request produces exactly one outcome: PROCEED, BLOCK, REQUIRE_ACK, or DEGRADE.',
-            ],
-          },
-          {
-            heading: 'What Changes Operationally',
-            body: [
-              'Execution cannot proceed without explicit clearance under declared constraints.',
-              'Responsibility attribution and audit evidence become by-construction properties rather than optional process artifacts.',
-            ],
-          },
+  },
+  constitution: {
+    title: 'ClearanceGate System Constitution',
+    summary: 'Constitutional guarantees, boundaries, and role responsibilities for the authorization layer.',
+    track: 'Core',
+    status: 'Published',
+    audience: ['Leadership', 'Internal Team', 'Partners'],
+    confidentiality: 'Public',
+    lastUpdated: '2026-01-15',
+    source: 'https://www.notion.so/2e9adcdd14e18056b947e344e71b8a90',
+    sections: [
+      {
+        heading: 'Purpose and Boundary',
+        body: [
+          'The system decides whether execution is authorized under explicit constraints.',
+          'It does not replace expert domain judgment or decide what action should be taken.',
         ],
       },
-      constitution: {
-        title: 'ClearanceGate System Constitution',
-        sections: [
-          {
-            heading: 'Purpose',
-            body: [
-              'ClearanceGate is a formal authorization system that decides whether execution is authorized under explicit constraints.',
-              'It does not decide what action should be taken and does not replace expert decision-makers.',
-            ],
-          },
-          {
-            heading: 'Constitutional Guarantees',
-            body: [
-              'Deterministic authorization outcome for each valid input.',
-              'Mutual exclusivity of outcomes and fail-closed behavior under uncertainty.',
-              'Auditability as a system invariant with reconstructable records.',
-            ],
-          },
-          {
-            heading: 'Boundary',
-            body: [
-              'ClearanceGate guarantees structural correctness, not outcome correctness.',
-              'External systems remain responsible for input quality, execution behavior, and domain decisions.',
-            ],
-          },
+      {
+        heading: 'Constitutional Guarantees',
+        body: [
+          'Deterministic authorization outcome for each valid input.',
+          'Mutual exclusivity of outcomes and fail-closed behavior under uncertainty.',
+          'Auditability as a non-negotiable system invariant.',
         ],
       },
-      'state-machine': {
-        title: 'Clearance State Machine & Invariants',
-        sections: [
-          {
-            heading: 'States',
-            body: [
-              'INIT, INFO_INSUFFICIENT, RISK_FLAGGED, AWAITING_ACK, AUTHORIZED, BLOCKED, DEGRADED.',
-              'Each decision instance exists in exactly one state at any moment.',
-            ],
-          },
-          {
-            heading: 'Outcome Mapping',
-            body: [
-              'AUTHORIZED -> PROCEED, AWAITING_ACK -> REQUIRE_ACK.',
-              'INFO_INSUFFICIENT/RISK_FLAGGED/BLOCKED -> BLOCK, DEGRADED -> DEGRADE.',
-            ],
-          },
-          {
-            heading: 'Invariants',
-            body: [
-              'Mutual exclusivity and outcome totality.',
-              'Fail-closed authorization under uncertainty.',
-              'Acknowledgment cannot override non-overridable constraints.',
-            ],
-          },
+      {
+        heading: 'Responsibility Model',
+        body: [
+          'Execution may proceed only when accountability and constraints are explicitly satisfied.',
+          'External systems remain accountable for input quality and execution behavior.',
         ],
       },
-      'formal-verification': {
-        title: 'Formal Verification Scope',
-        sections: [
-          {
-            heading: 'Verification Target',
-            body: [
-              'The clearance authorization kernel: states, transitions, outcome mapping, invariants.',
-              'Verification is structural and specification-level.',
-            ],
-          },
-          {
-            heading: 'In Scope',
-            body: [
-              'Mutual exclusivity, outcome totality, fail-closed behavior, auditability reachability.',
-              'Constraint semantics and acknowledgment boundary enforcement.',
-            ],
-          },
-          {
-            heading: 'Out Of Scope',
-            body: [
-              'Decision correctness, risk estimation quality, model performance, physical-world outcomes.',
-            ],
-          },
+      {
+        heading: 'Verification Scope',
+        body: [
+          'Kernel semantics are designed for formal analysis and structural verification.',
+          'The target is authorization correctness, not prediction accuracy.',
         ],
       },
-      architecture: {
-        title: 'Technical Architecture',
-        sections: [
-          {
-            heading: 'Core Components',
-            body: [
-              'Policy and constraint engine, state machine engine, authorization kernel, evidence generator.',
-              'Kernel remains deterministic and profile-independent.',
-            ],
-          },
-          {
-            heading: 'Integration Boundary',
-            body: [
-              'ClearanceGate is placed immediately before execution.',
-              'It exposes authorization APIs and evidence retrieval, not execution APIs.',
-            ],
-          },
-          {
-            heading: 'Deployment Topologies',
-            body: [
-              'Inline gate for production control, shadow mode for evaluation, async pre-authorization for legacy execution systems.',
-              'No unaudited bypass path should exist in blocking mode.',
-            ],
-          },
+    ],
+  },
+  'state-machine': {
+    title: 'Clearance State Machine and Invariants',
+    summary: 'Formal state definitions and outcome mapping rules for deterministic authorization.',
+    track: 'Core',
+    status: 'Published',
+    audience: ['Developers', 'Internal Team', 'Leadership'],
+    confidentiality: 'Public',
+    lastUpdated: '2026-01-15',
+    source: 'https://www.notion.so/2e9adcdd14e18030886de03b32d9ac8f',
+    sections: [
+      {
+        heading: 'State Set',
+        body: [
+          'INIT, INFO_INSUFFICIENT, RISK_FLAGGED, AWAITING_ACK, AUTHORIZED, BLOCKED, DEGRADED.',
+          'Each decision instance exists in exactly one state at any point in time.',
         ],
       },
-      api: {
-        title: 'API Documentation',
-        sections: [
-          {
-            heading: 'Endpoints',
-            body: [
-              'POST /authorize, POST /acknowledge, GET /audit/{decision_id}.',
-              'Responses always include a deterministic authorization outcome and evidence reference.',
-            ],
-          },
-          {
-            heading: 'Request Semantics',
-            body: [
-              'Each request requires request_id, decision_id, profile, action, context, responsibility, and source metadata.',
-              'request_id must be unique to ensure idempotency and replay safety.',
-            ],
-          },
-          {
-            heading: 'Operational Semantics',
-            body: [
-              'Identical inputs under the same rule version produce the same authorization outcome.',
-              'Internal errors never authorize execution and remain fail-closed.',
-            ],
-          },
+      {
+        heading: 'Outcome Mapping',
+        body: [
+          'AUTHORIZED maps to PROCEED and AWAITING_ACK maps to REQUIRE_ACK.',
+          'INFO_INSUFFICIENT, RISK_FLAGGED, and BLOCKED map to BLOCK; DEGRADED maps to DEGRADE.',
         ],
       },
-      'pilot-plan': {
-        title: 'ClearanceGate POC Pilot Plan',
-        sections: [
-          {
-            heading: 'Pilot Objective',
-            body: [
-              'Validate trust properties in a real workflow: explicit authorization, responsibility binding, and reconstructable evidence.',
-              'Pilot success focuses on structural safety, not business scale or throughput KPIs.',
-            ],
-          },
-          {
-            heading: 'Scope',
-            body: [
-              'One decision type, one execution boundary, one profile.',
-              'No optimization, no execution orchestration, and no broad workflow replacement in pilot scope.',
-            ],
-          },
-          {
-            heading: 'Phases',
-            body: [
-              'Week 1-2: alignment and profile setup. Week 3-4: integration and dry runs. Week 5-6: live or shadow execution with evidence review.',
-              'Pass condition includes no bypass, no ambiguous outcomes, and complete evidence for all non-blocked decisions.',
-            ],
-          },
+      {
+        heading: 'Invariant Set',
+        body: [
+          'Mutual exclusivity and outcome totality are always preserved.',
+          'Acknowledgment cannot bypass non-overridable constraints.',
         ],
       },
-      'enterprise-guide': {
-        title: 'Enterprise Implementation Guide',
-        sections: [
-          {
-            heading: 'Deployment Philosophy',
-            body: [
-              'ClearanceGate is a governance boundary placed before irreversible execution.',
-              'Safety takes priority over availability when authorization integrity is uncertain.',
-            ],
-          },
-          {
-            heading: 'Integration Checklist',
-            body: [
-              'Identify all execution entry points, route all paths through ClearanceGate, define roles, and verify fail-closed behavior.',
-              'Shadow mode evidence should be reviewed before enabling hard blocking mode.',
-            ],
-          },
-          {
-            heading: 'Operations',
-            body: [
-              'Monitor outcome distribution, degraded events, and missing information patterns.',
-              'Any kernel-level semantic change requires explicit review and re-verification.',
-            ],
-          },
+      {
+        heading: 'Operational Consequence',
+        body: [
+          'No ambiguous output path is permitted.',
+          'No hidden route exists from uncertain state to PROCEED.',
         ],
       },
-      security: {
-        title: 'Security Compliance Report',
-        sections: [
-          {
-            heading: 'Security Model',
-            body: [
-              'Governance-first security with explicit trust boundaries and no implicit allow behavior.',
-              'Threats include unauthorized execution, bypass risk, ambiguous responsibility, and audit tampering.',
-            ],
-          },
-          {
-            heading: 'Fail-Closed & Degraded Behavior',
-            body: [
-              'Missing required data, invalid inputs, or internal errors resolve to safe outcomes only.',
-              'DEGRADED state prohibits PROCEED and requires explicit recovery handling.',
-            ],
-          },
-          {
-            heading: 'Evidence Integrity',
-            body: [
-              'Audit records are append-only and authorization-critical.',
-              'Failure to persist evidence prevents authorization.',
-            ],
-          },
+    ],
+  },
+  'formal-verification': {
+    title: 'Formal Verification Scope',
+    summary: 'What is formally verified in the kernel and what remains outside verification claims.',
+    track: 'Core',
+    status: 'In Progress',
+    audience: ['Developers', 'Partners', 'Leadership'],
+    confidentiality: 'Public',
+    lastUpdated: '2026-01-15',
+    source: 'https://www.notion.so/2e9adcdd14e180c2b12ff418128abc10',
+    sections: [
+      {
+        heading: 'Verification Target',
+        body: [
+          'States, transitions, invariant preservation, and outcome mapping in the authorization kernel.',
+          'Verification is specification-level and structural, not domain predictive.',
         ],
       },
-      roadmap: {
-        title: 'Product Roadmap',
-        sections: [
-          {
-            heading: 'Roadmap Principles',
-            body: [
-              'Correctness before coverage, embedding before scaling, invariants before intelligence.',
-              'Trust and defensibility are prioritized over feature velocity.',
-            ],
-          },
-          {
-            heading: 'Phased Evolution',
-            body: [
-              'Phase 0: authorization core. Phase 1: evidence foundation. Phase 2: executable MVP.',
-              'Phase 3+: first profile pilot, governance tooling, then enterprise readiness.',
-            ],
-          },
-          {
-            heading: 'Deliberate Non-Goals',
-            body: [
-              'Not a recommendation engine, not a risk prediction platform, not a workflow replacement suite.',
-            ],
-          },
+      {
+        heading: 'In Scope',
+        body: [
+          'Mutual exclusivity, totality of outcomes, fail-closed behavior, and auditability reachability.',
+          'Constraint semantics and acknowledgment boundary correctness.',
         ],
       },
-      personas: {
-        title: 'User Personas & Accountability',
-        sections: [
-          {
-            heading: 'Decision Owner',
-            body: [
-              'Accountable for whether execution proceeds and for explaining authorization rationale after incidents.',
-              'Values deterministic outcomes, explicit boundaries, and defensible accountability.',
-            ],
-          },
-          {
-            heading: 'Acknowledging Authority',
-            body: [
-              'Provides explicit acceptance for risk-elevated decisions when policy requires acknowledgment.',
-              'Needs precise scope, bounded responsibility, and clear constraints that cannot be overridden.',
-            ],
-          },
-          {
-            heading: 'Operator & Auditor',
-            body: [
-              'Operators need unambiguous machine-readable outcomes; auditors need reconstructable timelines with evidence.',
-              'Both benefit from reduced ambiguity and stronger post-incident review quality.',
-            ],
-          },
+      {
+        heading: 'Out of Scope',
+        body: [
+          'Decision quality, risk scoring quality, model performance, and physical world outcomes.',
+          'Any claim that depends on external system behavior is excluded.',
         ],
       },
-      pricing: {
-        title: 'Pricing Logic',
-        sections: [
-          {
-            heading: 'Pricing Principle',
-            body: [
-              'ClearanceGate is priced as risk infrastructure, not usage software.',
-              'License unit is authorization domain rather than calls, seats, or model usage.',
-            ],
-          },
-          {
-            heading: 'Commercial Dynamics',
-            body: [
-              'Paid pilots transition to embedded annual enterprise licenses.',
-              'Optional compliance and audit enablement services support adoption.',
-            ],
-          },
-          {
-            heading: 'Guardrails',
-            body: [
-              'No incentives that discourage safe blocking behavior.',
-              'Pricing discipline protects trust and long-term infrastructure positioning.',
-            ],
-          },
+    ],
+  },
+  architecture: {
+    title: 'ClearanceGate Technical Architecture',
+    summary: 'Component design and deployment topology for execution-boundary authorization.',
+    track: 'Engineering',
+    status: 'Published',
+    audience: ['Developers', 'Internal Team', 'Partners'],
+    confidentiality: 'Public',
+    lastUpdated: '2026-01-15',
+    source: 'https://www.notion.so/2e9adcdd14e180c594d3f5a43bd48aee',
+    sections: [
+      {
+        heading: 'Core Components',
+        body: [
+          'Policy and constraint engine, state machine engine, authorization kernel, evidence generator.',
+          'Kernel semantics remain deterministic and profile-independent.',
         ],
       },
-    },
+      {
+        heading: 'Integration Boundary',
+        body: [
+          'The system is placed directly before execution, not after incident detection.',
+          'The API surface is authorization-centric and evidence-centric.',
+        ],
+      },
+      {
+        heading: 'Deployment Modes',
+        body: [
+          'Inline gate for hard control, shadow mode for comparative validation.',
+          'Async pre-authorization supports legacy execution chains without bypassing audit requirements.',
+        ],
+      },
+      {
+        heading: 'Architecture Guardrail',
+        body: [
+          'Blocking mode must not permit any unaudited bypass path.',
+          'Evidence persistence is a prerequisite for non-blocking outcomes.',
+        ],
+      },
+    ],
+  },
+  api: {
+    title: 'ClearanceGate API Documentation',
+    summary: 'Public API semantics for authorization, acknowledgment, and audit retrieval.',
+    track: 'Engineering',
+    status: 'Published',
+    audience: ['Developers', 'Partners'],
+    confidentiality: 'Public',
+    lastUpdated: '2026-01-15',
+    source: 'https://www.notion.so/2e9adcdd14e180dea077d90588b2d607',
+    sections: [
+      {
+        heading: 'Endpoint Surface',
+        body: [
+          'POST /authorize and POST /acknowledge for decision control.',
+          'GET /audit/{decision_id} for reconstructable evidence retrieval.',
+        ],
+      },
+      {
+        heading: 'Required Inputs',
+        body: [
+          'request_id, decision_id, profile, action, context, responsibility, and source metadata are mandatory.',
+          'request_id uniqueness guarantees idempotency and replay safety.',
+        ],
+      },
+      {
+        heading: 'Operational Semantics',
+        body: [
+          'Identical inputs under identical rule version produce identical authorization outcomes.',
+          'Internal errors must remain fail-closed and cannot authorize execution.',
+        ],
+      },
+      {
+        heading: 'Evidence Contract',
+        body: [
+          'Non-blocking outcomes require evidence references.',
+          'Audit records are structured for post-incident reconstruction and compliance review.',
+        ],
+      },
+    ],
+  },
+  'pilot-plan': {
+    title: 'ClearanceGate POC Pilot Plan',
+    summary: 'Six-week pilot framework to validate structural safety in real execution workflows.',
+    track: 'Operations',
+    status: 'Pilot Ready',
+    audience: ['Leadership', 'Partners', 'Customers'],
+    confidentiality: 'Public',
+    lastUpdated: '2026-01-15',
+    source: 'https://www.notion.so/2e9adcdd14e18093b488e0fb325e5506',
+    sections: [
+      {
+        heading: 'Pilot Objective',
+        body: [
+          'Validate explicit authorization, accountability binding, and evidence reconstructability in a live workflow.',
+          'Primary success metric is structural safety, not throughput or scale.',
+        ],
+      },
+      {
+        heading: 'Scope Envelope',
+        body: [
+          'One decision type, one execution boundary, one policy profile.',
+          'Workflow replacement, optimization, and broad process transformation are intentionally out of scope.',
+        ],
+      },
+      {
+        heading: 'Execution Phases',
+        body: [
+          'Week 1-2 alignment and profile setup; Week 3-4 integration and dry runs; Week 5-6 live or shadow execution.',
+          'Pass criteria include no bypass path, no ambiguous outcomes, and complete evidence for all non-blocking decisions.',
+        ],
+      },
+    ],
+  },
+  'enterprise-guide': {
+    title: 'ClearanceGate Enterprise Implementation Guide',
+    summary: 'Enterprise integration approach, rollout sequence, and operating model for production adoption.',
+    track: 'Operations',
+    status: 'Published',
+    audience: ['Internal Team', 'Customers', 'Partners'],
+    confidentiality: 'Public',
+    lastUpdated: '2026-01-15',
+    source: 'https://www.notion.so/2e9adcdd14e1806fa868c35fb740f1ae',
+    sections: [
+      {
+        heading: 'Deployment Philosophy',
+        body: [
+          'Treat ClearanceGate as a governance boundary before irreversible execution.',
+          'When authorization integrity is uncertain, safety has priority over availability.',
+        ],
+      },
+      {
+        heading: 'Integration Checklist',
+        body: [
+          'Identify every execution entry point and route all paths through the authorization gate.',
+          'Validate fail-closed behavior in shadow mode before enabling hard blocking mode.',
+        ],
+      },
+      {
+        heading: 'Operational Practices',
+        body: [
+          'Monitor outcome distribution, DEGRADED rates, and information sufficiency patterns.',
+          'Kernel semantic changes require explicit review and re-verification before release.',
+        ],
+      },
+    ],
+  },
+  security: {
+    title: 'ClearanceGate Security Compliance Report',
+    summary: 'Security posture, fail-closed control expectations, and evidence integrity responsibilities.',
+    track: 'Operations',
+    status: 'Published',
+    audience: ['Leadership', 'Customers', 'Partners'],
+    confidentiality: 'Public',
+    lastUpdated: '2026-01-15',
+    source: 'https://www.notion.so/2e9adcdd14e180a4bdf7d8dec1de7215',
+    sections: [
+      {
+        heading: 'Security Model',
+        body: [
+          'Governance-first architecture with explicit trust boundaries and no implicit allow path.',
+          'Threat model includes unauthorized execution, bypass risk, responsibility ambiguity, and audit tampering.',
+        ],
+      },
+      {
+        heading: 'Fail-Closed Enforcement',
+        body: [
+          'Missing required data, invalid inputs, or internal errors must resolve to safe outcomes only.',
+          'DEGRADED state must prohibit PROCEED and require explicit recovery procedure.',
+        ],
+      },
+      {
+        heading: 'Evidence Integrity',
+        body: [
+          'Audit records are append-only and authorization-critical.',
+          'Failure to persist evidence prevents authorization.',
+        ],
+      },
+    ],
+  },
+  roadmap: {
+    title: 'ClearanceGate Product Roadmap',
+    summary: 'Phased product evolution focused on correctness, embedding, and governance depth.',
+    track: 'Business',
+    status: 'In Progress',
+    audience: ['Leadership', 'Investors', 'Partners'],
+    confidentiality: 'Public',
+    lastUpdated: '2026-01-15',
+    source: 'https://www.notion.so/2e9adcdd14e180f2ae87e1b2425f2360',
+    sections: [
+      {
+        heading: 'Roadmap Principles',
+        body: [
+          'Correctness before coverage, embedding before scaling, invariants before intelligence.',
+          'Trust and defensibility outrank short-term feature velocity.',
+        ],
+      },
+      {
+        heading: 'Phased Evolution',
+        body: [
+          'Phase 0 authorization core, Phase 1 evidence foundation, Phase 2 executable MVP.',
+          'Later phases extend profile coverage, governance tooling, and enterprise readiness.',
+        ],
+      },
+      {
+        heading: 'Deliberate Non-Goals',
+        body: [
+          'No recommendation engine, no risk prediction platform, no workflow replacement suite.',
+          'Product scope remains anchored to authorization infrastructure.',
+        ],
+      },
+    ],
+  },
+  personas: {
+    title: 'ClearanceGate User Personas and Accountability',
+    summary: 'Role model for decision owners, acknowledging authority, operators, and auditors.',
+    track: 'Business',
+    status: 'Published',
+    audience: ['Leadership', 'Customers', 'Internal Team'],
+    confidentiality: 'Public',
+    lastUpdated: '2026-01-15',
+    source: 'https://www.notion.so/2e9adcdd14e180c79c5bcdc4fdb5ce8b',
+    sections: [
+      {
+        heading: 'Decision Owner',
+        body: [
+          'Accountable for execution outcomes and for post-incident rationale defensibility.',
+          'Requires deterministic boundaries and explicit responsibility mapping.',
+        ],
+      },
+      {
+        heading: 'Acknowledging Authority',
+        body: [
+          'Provides explicit responsibility acceptance when policy mandates acknowledgment.',
+          'Needs tightly scoped responsibility and non-overridable constraint transparency.',
+        ],
+      },
+      {
+        heading: 'Operator and Auditor',
+        body: [
+          'Operators require unambiguous machine-readable outcomes.',
+          'Auditors require reconstructable timelines and evidence completeness.',
+        ],
+      },
+    ],
+  },
+  pricing: {
+    title: 'ClearanceGate Pricing Logic',
+    summary: 'Infrastructure-style pricing model anchored to risk exposure and accountability value.',
+    track: 'Business',
+    status: 'Published',
+    audience: ['Leadership', 'Investors', 'Sales'],
+    confidentiality: 'Public',
+    lastUpdated: '2026-01-15',
+    source: 'https://www.notion.so/2e9adcdd14e1801f9ab8eea88b39ed2d',
+    sections: [
+      {
+        heading: 'Pricing Principle',
+        body: [
+          'ClearanceGate is priced as risk infrastructure rather than usage software.',
+          'License unit is authorization domain, not API calls, model usage, or seat count.',
+        ],
+      },
+      {
+        heading: 'Commercial Dynamics',
+        body: [
+          'Paid pilots convert to embedded annual enterprise licenses.',
+          'Optional compliance and audit enablement services accelerate adoption.',
+        ],
+      },
+      {
+        heading: 'Guardrails',
+        body: [
+          'No pricing incentive may discourage safe BLOCK outcomes.',
+          'Pricing discipline protects long-term trust and infrastructure positioning.',
+        ],
+      },
+    ],
+  },
+  'market-opportunity': {
+    title: 'ClearanceGate Market Opportunity Analysis',
+    summary: 'Cross-industry market framing for authorization infrastructure in AI-accelerated execution systems.',
+    track: 'Business',
+    status: 'Draft',
+    audience: ['Investors', 'Leadership', 'Partners'],
+    confidentiality: 'Public',
+    lastUpdated: '2026-01-15',
+    source: 'https://www.notion.so/2e9adcdd14e180a0a0b8c743c64870b7',
+    sections: [
+      {
+        heading: 'Structural Demand',
+        body: [
+          'Automation has scaled decision generation and execution speed faster than authorization controls.',
+          'The persistent exposure is not decision quality alone, but inability to prove why execution was allowed.',
+        ],
+      },
+      {
+        heading: 'Timing Drivers',
+        body: [
+          'Execution latency has dropped from hours to milliseconds across finance, IT operations, and industrial systems.',
+          'Regulatory and internal accountability pressure keeps rising, making explicit authorization unavoidable.',
+        ],
+      },
+      {
+        heading: 'Target Segments',
+        body: [
+          'Initial adoption is strongest where irreversible execution and audit pressure already exist.',
+          'Entry segments include quant finance, enterprise IT operations, industrial automation, and regulated workflows.',
+        ],
+      },
+      {
+        heading: 'Expansion Logic',
+        body: [
+          'Land one execution surface, embed into governance, then expand to adjacent decision surfaces.',
+          'Growth scales with criticality of actions and number of governed execution points.',
+        ],
+      },
+    ],
+  },
+  'competitive-landscape': {
+    title: 'ClearanceGate Competitive Landscape',
+    summary: 'Positioning analysis across risk analytics, workflow tools, governance frameworks, and logging platforms.',
+    track: 'Business',
+    status: 'Draft',
+    audience: ['Investors', 'Leadership', 'Partners'],
+    confidentiality: 'Public',
+    lastUpdated: '2026-01-15',
+    source: 'https://www.notion.so/2e9adcdd14e1809dac36f01a68a07e81',
+    sections: [
+      {
+        heading: 'Execution Stack Position',
+        body: [
+          'Most vendors operate before execution (analytics, workflows) or after execution (logging, observability).',
+          'ClearanceGate is positioned at the authorization layer directly before execution.',
+        ],
+      },
+      {
+        heading: 'Why Existing Categories Are Not Substitutes',
+        body: [
+          'Risk tools assess what might happen; they do not decide whether execution may proceed.',
+          'Workflow tools route approvals but do not enforce formal authorization invariants and fail-closed semantics.',
+        ],
+      },
+      {
+        heading: 'Strategic Defensibility',
+        body: [
+          'Once embedded in execution and governance documentation, removal materially increases operational risk.',
+          'This creates infrastructure-level switching costs and long-term retention dynamics.',
+        ],
+      },
+    ],
+  },
+  'financial-projections': {
+    title: 'ClearanceGate Financial Projections',
+    summary: 'Milestone-driven financial model focused on runway discipline and trust-first infrastructure scaling.',
+    track: 'Business',
+    status: 'Draft',
+    audience: ['Investors', 'Leadership'],
+    confidentiality: 'Public',
+    lastUpdated: '2026-01-15',
+    source: 'https://www.notion.so/2e9adcdd14e180aaa2e1f1cbb70afd33',
+    sections: [
+      {
+        heading: 'Financial Philosophy',
+        body: [
+          'Runway over growth, validation over scale, correctness over speed, and embedding over acquisition.',
+          'Model intentionally avoids burn-heavy growth assumptions.',
+        ],
+      },
+      {
+        heading: 'Revenue Architecture',
+        body: [
+          'Enterprise authorization license, paid pilot engagements, and optional compliance enablement services.',
+          'Pricing anchors to incident and accountability risk exposure, not usage volume.',
+        ],
+      },
+      {
+        heading: 'Phased Economics',
+        body: [
+          'Phase 1 validates core with minimal burn; Phase 2 converts pilots; Phase 3 targets repeatable enterprise contracts.',
+          'Burn scales only after embedded usage and renewal signals are proven.',
+        ],
+      },
+      {
+        heading: 'Investor Relevance',
+        body: [
+          'Infrastructure retention profile with low churn once authorization becomes operationally sticky.',
+          'Not dependent on AI model race dynamics for core value creation.',
+        ],
+      },
+    ],
+  },
+  'pitch-deck': {
+    title: 'ClearanceGate Pitch Deck',
+    summary: 'Investor-facing storyline: problem framing, solution wedge, market category, traction, and funding ask.',
+    track: 'Business',
+    status: 'Pilot Ready',
+    audience: ['Investors', 'Leadership', 'Partners'],
+    confidentiality: 'Public',
+    lastUpdated: '2026-01-15',
+    source: 'https://www.notion.so/2e9adcdd14e180c3a980cab6673187fd',
+    sections: [
+      {
+        heading: 'Narrative Core',
+        body: [
+          'Decisions are accelerating through AI and automation; authorization is not scaling at the same pace.',
+          'ClearanceGate positions authorization as a first-class infrastructure layer before execution.',
+        ],
+      },
+      {
+        heading: 'Differentiation Signal',
+        body: [
+          'Competes on authorization semantics and invariants rather than model intelligence or analytics breadth.',
+          'Guarantees defensibility and accountability by construction.',
+        ],
+      },
+      {
+        heading: 'Go-To-Market Thesis',
+        body: [
+          'Start with pilot-ready high-accountability environments, then convert into annual enterprise contracts.',
+          'Focus on execution surfaces where blocked actions are as important as allowed actions.',
+        ],
+      },
+      {
+        heading: 'Funding Use',
+        body: [
+          'Pre-seed capital is allocated to core development, pilot execution, and compliance readiness.',
+          'Milestones prioritize embedded pilots and repeatable authorization profile adoption.',
+        ],
+      },
+    ],
+  },
+}
+
+const jaTitles: Record<string, string> = {
+  'executive-summary': 'ClearanceGate エグゼクティブサマリー',
+  constitution: 'ClearanceGate システム憲章',
+  'state-machine': 'クリアランス状態機械と不変条件',
+  'formal-verification': '形式検証の範囲',
+  architecture: '技術アーキテクチャ',
+  api: 'API 仕様',
+  'pilot-plan': 'POC パイロット計画',
+  'enterprise-guide': 'エンタープライズ実装ガイド',
+  security: 'セキュリティ / コンプライアンス報告',
+  roadmap: 'プロダクトロードマップ',
+  personas: 'ユーザーペルソナと責任境界',
+  pricing: '価格ロジック',
+  'market-opportunity': '市場機会分析',
+  'competitive-landscape': '競争環境分析',
+  'financial-projections': '財務予測',
+  'pitch-deck': 'ピッチデッキ',
+}
+
+const jaSummaries: Record<string, string> = {
+  'executive-summary': '意思決定の高速化時代における認可インフラの必要性を示す要約。',
+  constitution: '認可システムの中核保証、責務境界、設計原則を定義。',
+  'state-machine': '決定論的認可を実現する状態機械と結果マッピングの定義。',
+  'formal-verification': '形式検証の対象、範囲内、範囲外を明確化。',
+  architecture: '実行直前に配置する認可境界の技術アーキテクチャ。',
+  api: '認可・承認・証跡取得 API の運用意味論。',
+  'pilot-plan': '6週間で構造的安全性を検証するパイロット計画。',
+  'enterprise-guide': 'エンタープライズ導入の手順、運用、ガードレール。',
+  security: 'fail-closed と証跡整合性を中心としたセキュリティモデル。',
+  roadmap: 'Correctness 優先で進む段階的なプロダクト進化。',
+  personas: '意思決定責任者・承認権限者・運用者の責任分界。',
+  pricing: '利用量ではなくリスク責任に紐づく価格設計。',
+  'market-opportunity': 'AI 時代の実行統制ギャップを捉える市場機会。',
+  'competitive-landscape': '分析系ツールと認可インフラの構造的な違いを整理。',
+  'financial-projections': '検証重視で進めるマイルストーン型の財務計画。',
+  'pitch-deck': '問題、解決、差別化、資金使途をまとめた投資家向け資料。',
+}
+
+const localizeToJa = (content: DocsContent): DocsContent =>
+  Object.fromEntries(
+    Object.entries(content).map(([slug, doc]) => [
+      slug,
+      {
+        ...doc,
+        title: jaTitles[slug] || doc.title,
+        summary: jaSummaries[slug] || doc.summary,
+      },
+    ]),
+  )
+
+const toNav = (content: DocsContent) =>
+  docsOrder
+    .filter((slug) => Boolean(content[slug]))
+    .map((slug) => ({
+      slug,
+      title: content[slug].title,
+    }))
+
+const jaContent = localizeToJa(enContent)
+
+const docsCatalog: Record<string, DocsCatalog> = {
+  en: {
+    nav: toNav(enContent),
+    content: enContent,
   },
   ja: {
-    nav: [
-      { slug: 'executive-summary', title: 'エグゼクティブサマリー' },
-      { slug: 'constitution', title: 'システム憲章' },
-      { slug: 'state-machine', title: '状態機械と不変条件' },
-      { slug: 'formal-verification', title: '形式検証の範囲' },
-      { slug: 'architecture', title: '技術アーキテクチャ' },
-      { slug: 'api', title: 'API 仕様' },
-      { slug: 'pilot-plan', title: 'POC パイロット計画' },
-      { slug: 'enterprise-guide', title: 'エンタープライズ実装ガイド' },
-      { slug: 'security', title: 'セキュリティ / コンプライアンス' },
-      { slug: 'roadmap', title: 'プロダクトロードマップ' },
-      { slug: 'personas', title: 'ユーザーペルソナ' },
-      { slug: 'pricing', title: '価格ロジック' },
-    ],
-    content: {
-      'executive-summary': {
-        title: 'ClearanceGate エグゼクティブサマリー',
-        sections: [
-          {
-            heading: '課題',
-            body: [
-              '重要な実行は自動化が進む一方で、承認は依然として暗黙運用に依存しています。',
-              'インシデント後に責任や根拠を後追い再構成する体制では、防御可能性が低下します。',
-            ],
-          },
-          {
-            heading: '解決策',
-            body: [
-              'ClearanceGate は意思決定提案と実行の間に、決定論的な認可境界を挿入します。',
-              '全リクエストは PROCEED / BLOCK / REQUIRE_ACK / DEGRADE のいずれか一つだけを返します。',
-            ],
-          },
-          {
-            heading: '運用上の変化',
-            body: [
-              '宣言済み制約の下で明示的クリアランスがない限り実行できません。',
-              '責任帰属と監査証跡は任意の成果物ではなく、構造的なシステム特性になります。',
-            ],
-          },
-        ],
-      },
-      constitution: {
-        title: 'ClearanceGate システム憲章',
-        sections: [
-          {
-            heading: '目的',
-            body: [
-              'ClearanceGate は明示的制約に基づいて実行可否を判定する、形式的な認可システムです。',
-              '何を実行すべきかは決めず、専門家による意思決定を置き換えません。',
-            ],
-          },
-          {
-            heading: '中核保証',
-            body: [
-              '有効入力に対して決定論的な認可結果を返すこと。',
-              '結果の相互排他性と、不確実時の fail-closed 動作。',
-              '再構成可能な監査証跡を不変条件として保持。',
-            ],
-          },
-          {
-            heading: '責務境界',
-            body: [
-              '保証対象は構造的正当性であり、ドメイン結果の正しさではありません。',
-              '入力品質、実行挙動、業務判断は外部システムが責任を持ちます。',
-            ],
-          },
-        ],
-      },
-      'state-machine': {
-        title: 'クリアランス状態機械と不変条件',
-        sections: [
-          {
-            heading: '状態',
-            body: [
-              'INIT, INFO_INSUFFICIENT, RISK_FLAGGED, AWAITING_ACK, AUTHORIZED, BLOCKED, DEGRADED。',
-              '各判断インスタンスは常に一つの状態にのみ存在します。',
-            ],
-          },
-          {
-            heading: '結果マッピング',
-            body: [
-              'AUTHORIZED -> PROCEED, AWAITING_ACK -> REQUIRE_ACK。',
-              'INFO_INSUFFICIENT / RISK_FLAGGED / BLOCKED -> BLOCK, DEGRADED -> DEGRADE。',
-            ],
-          },
-          {
-            heading: '不変条件',
-            body: [
-              '相互排他性と結果全域性。',
-              '不確実時の fail-closed 認可。',
-              '非上書き制約は ACK で回避できないこと。',
-            ],
-          },
-        ],
-      },
-      'formal-verification': {
-        title: '形式検証の範囲',
-        sections: [
-          {
-            heading: '検証対象',
-            body: [
-              '認可カーネルの状態、遷移、結果マッピング、不変条件。',
-              '検証は構造レベル・仕様レベルで行います。',
-            ],
-          },
-          {
-            heading: '対象内',
-            body: [
-              '相互排他性、結果全域性、fail-closed、監査到達可能性。',
-              '制約意味論と ACK 境界の強制。',
-            ],
-          },
-          {
-            heading: '対象外',
-            body: ['意思決定の正しさ、リスク推定精度、モデル性能、現実世界の結果。'],
-          },
-        ],
-      },
-      architecture: {
-        title: '技術アーキテクチャ',
-        sections: [
-          {
-            heading: 'コア構成要素',
-            body: [
-              'ポリシー/制約エンジン、状態機械エンジン、認可カーネル、証跡生成器。',
-              'カーネルは決定論的かつプロファイル非依存で維持されます。',
-            ],
-          },
-          {
-            heading: '統合境界',
-            body: [
-              'ClearanceGate は実行直前の境界に配置します。',
-              '提供するのは認可 API と証跡参照であり、実行 API ではありません。',
-            ],
-          },
-          {
-            heading: '配置トポロジ',
-            body: [
-              '本番は Inline Gate、検証は Shadow Mode、レガシー連携は Async Pre-Authorization。',
-              '強制モードでの無監査バイパスは禁止です。',
-            ],
-          },
-        ],
-      },
-      api: {
-        title: 'API 仕様',
-        sections: [
-          {
-            heading: 'エンドポイント',
-            body: [
-              'POST /authorize, POST /acknowledge, GET /audit/{decision_id}。',
-              'レスポンスには決定論的な認可結果と証跡参照を常に含みます。',
-            ],
-          },
-          {
-            heading: 'リクエスト意味論',
-            body: [
-              'request_id, decision_id, profile, action, context, responsibility, metadata を必須化。',
-              'request_id の一意性により冪等性とリプレイ安全性を担保します。',
-            ],
-          },
-          {
-            heading: '運用意味論',
-            body: [
-              '同一ルール版で同一入力なら同一結果を返します。',
-              '内部エラー時に PROCEED は返さず fail-closed を維持します。',
-            ],
-          },
-        ],
-      },
-      'pilot-plan': {
-        title: 'ClearanceGate POC パイロット計画',
-        sections: [
-          {
-            heading: '目的',
-            body: [
-              '実ワークフローで明示認可、責任拘束、証跡再構成可能性を検証します。',
-              '評価対象は売上や規模ではなく、構造的安全性です。',
-            ],
-          },
-          {
-            heading: 'スコープ',
-            body: [
-              '判断タイプ 1 つ、実行境界 1 つ、プロファイル 1 つに限定。',
-              '最適化、実行オーケストレーション、業務ワークフロー置換は範囲外。',
-            ],
-          },
-          {
-            heading: 'フェーズ',
-            body: [
-              'Week 1-2: 合意と設定。Week 3-4: 連携とドライラン。Week 5-6: 実運用/シャドー実行。',
-              'バイパスなし、曖昧な結果なし、非ブロック判断の完全証跡を合格条件とします。',
-            ],
-          },
-        ],
-      },
-      'enterprise-guide': {
-        title: 'エンタープライズ実装ガイド',
-        sections: [
-          {
-            heading: '配置思想',
-            body: [
-              'ClearanceGate は不可逆実行の直前に置くガバナンス境界です。',
-              '認可整合性が不確実な場合は可用性より安全性を優先します。',
-            ],
-          },
-          {
-            heading: '導入チェックリスト',
-            body: [
-              '実行入口の特定、全経路の経由強制、役割定義、fail-closed 検証を実施。',
-              '強制モード前に Shadow Mode の証跡をレビューします。',
-            ],
-          },
-          {
-            heading: '運用',
-            body: [
-              '結果分布、DEGRADED 発生、情報不足パターンを監視します。',
-              'カーネル意味論に関わる変更は明示レビューと再検証が必要です。',
-            ],
-          },
-        ],
-      },
-      security: {
-        title: 'セキュリティ / コンプライアンス報告',
-        sections: [
-          {
-            heading: 'セキュリティモデル',
-            body: [
-              '明示的な信頼境界と暗黙許可禁止を前提とする governance-first 設計。',
-              '脅威は未承認実行、バイパス、責任曖昧化、監査改ざんを想定します。',
-            ],
-          },
-          {
-            heading: 'Fail-Closed と DEGRADED',
-            body: [
-              '必須情報欠落、入力不正、内部エラーは安全側結果に収束します。',
-              'DEGRADED 状態では PROCEED を禁止し、明示復旧を要求します。',
-            ],
-          },
-          {
-            heading: '証跡整合性',
-            body: [
-              '監査記録は追記専用で認可クリティカルです。',
-              '証跡永続化に失敗した場合は認可しません。',
-            ],
-          },
-        ],
-      },
-      roadmap: {
-        title: 'プロダクトロードマップ',
-        sections: [
-          {
-            heading: '原則',
-            body: [
-              'Coverage より Correctness、Scale より Embedding、Intelligence より Invariants。',
-              '短期機能より長期的な信頼性と防御可能性を優先します。',
-            ],
-          },
-          {
-            heading: '段階的進化',
-            body: [
-              'Phase 0: 認可コア、Phase 1: 証跡基盤、Phase 2: 実行可能 MVP。',
-              'Phase 3 以降は業界プロファイル、ガバナンス機能、Enterprise Ready へ拡張。',
-            ],
-          },
-          {
-            heading: '非目標',
-            body: [
-              '推奨エンジン、リスク予測基盤、ワークフロー全面置換スイートにはしません。',
-            ],
-          },
-        ],
-      },
-      personas: {
-        title: 'ユーザーペルソナと責任境界',
-        sections: [
-          {
-            heading: 'Decision Owner',
-            body: [
-              '実行可否に最終責任を持ち、事後レビューで認可根拠を説明します。',
-              '決定論、責任明確化、防御可能性を重視します。',
-            ],
-          },
-          {
-            heading: 'Acknowledging Authority',
-            body: [
-              'REQUIRE_ACK 時に境界付きで責任受諾を明示します。',
-              '何を承認し何を承認しないかが明確であることを必要とします。',
-            ],
-          },
-          {
-            heading: 'Operator と Auditor',
-            body: [
-              'Operator は曖昧さのない機械可読結果を必要とし、Auditor は再構成可能な時系列証跡を必要とします。',
-              '両者とも運用の透明性と事後説明品質を高められます。',
-            ],
-          },
-        ],
-      },
-      pricing: {
-        title: '価格ロジック',
-        sections: [
-          {
-            heading: '価格原則',
-            body: [
-              'ClearanceGate は利用量課金ではなく、リスク基盤として価格設計します。',
-              'ライセンス単位は API 回数や席数ではなく Authorization Domain です。',
-            ],
-          },
-          {
-            heading: '商流',
-            body: [
-              '有償パイロットから埋め込み型の年契約へ移行します。',
-              '監査・コンプライアンス支援はオプションとして提供します。',
-            ],
-          },
-          {
-            heading: 'ガードレール',
-            body: [
-              '安全な BLOCK を阻害する価格インセンティブは設けません。',
-              '価格規律で信頼と長期インフラ価値を守ります。',
-            ],
-          },
-        ],
-      },
-    },
+    nav: toNav(jaContent),
+    content: jaContent,
   },
 }
 
 export const docsNav = docsCatalog.en.nav
 export const docsContent = docsCatalog.en.content
 
-export const getDocsForLocale = (locale) => docsCatalog[locale] || docsCatalog.en
-
+export const getDocsForLocale = (locale: string): DocsCatalog => docsCatalog[locale] || docsCatalog.en

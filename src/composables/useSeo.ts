@@ -59,6 +59,18 @@ function upsertAlternate(hreflang: string, href: string) {
   el.setAttribute('href', href)
 }
 
+function upsertJsonLd(payload: Record<string, unknown>) {
+  const selector = 'script[data-cg-seo="json-ld"]'
+  let el = document.head.querySelector(selector) as HTMLScriptElement | null
+  if (!el) {
+    el = document.createElement('script')
+    el.setAttribute('type', 'application/ld+json')
+    el.setAttribute('data-cg-seo', 'json-ld')
+    document.head.appendChild(el)
+  }
+  el.textContent = JSON.stringify(payload)
+}
+
 function upsertLocaleAlternates(normalizedPath: string) {
   const localeMatch = normalizedPath.match(/^\/(en|ja)(\/.*)?$/)
   const suffix = localeMatch ? localeMatch[2] || '' : normalizedPath
@@ -67,6 +79,11 @@ function upsertLocaleAlternates(normalizedPath: string) {
   upsertAlternate('en', `${SITE_URL}${enPath}`)
   upsertAlternate('ja', `${SITE_URL}${jaPath}`)
   upsertAlternate('x-default', `${SITE_URL}${enPath}`)
+}
+
+function resolveLocale(normalizedPath: string) {
+  const localeMatch = normalizedPath.match(/^\/(en|ja)(\/.*)?$/)
+  return localeMatch?.[1] || 'en'
 }
 
 export function useSeo(input: SeoInput) {
@@ -78,6 +95,8 @@ export function useSeo(input: SeoInput) {
     const normalizedPath = path.startsWith('/') ? path : `/${path}`
     const canonicalUrl = `${SITE_URL}${normalizedPath}`
     const fullTitle = title.includes(SITE_NAME) ? title : `${title} | ${SITE_NAME}`
+    const locale = resolveLocale(normalizedPath)
+    const localeAlt = locale === 'en' ? 'ja_JP' : 'en_US'
 
     document.title = fullTitle
     upsertCanonical(canonicalUrl)
@@ -85,23 +104,50 @@ export function useSeo(input: SeoInput) {
 
     upsertMetaByName('description', description)
     upsertMetaByName('robots', 'index, follow')
+    upsertMetaByName('theme-color', '#0f766e')
     upsertMetaByName('twitter:card', 'summary')
+    upsertMetaByName('twitter:site', '@clearancegate')
     upsertMetaByName('twitter:title', fullTitle)
     upsertMetaByName('twitter:description', description)
     upsertMetaByName('twitter:image', DEFAULT_IMAGE)
 
     upsertMetaByProperty('og:type', type)
+    upsertMetaByProperty('og:locale', locale === 'ja' ? 'ja_JP' : 'en_US')
+    upsertMetaByProperty('og:locale:alternate', localeAlt)
     upsertMetaByProperty('og:site_name', SITE_NAME)
     upsertMetaByProperty('og:title', fullTitle)
     upsertMetaByProperty('og:description', description)
     upsertMetaByProperty('og:url', canonicalUrl)
     upsertMetaByProperty('og:image', DEFAULT_IMAGE)
+
+    upsertJsonLd({
+      '@context': 'https://schema.org',
+      '@graph': [
+        {
+          '@type': 'Organization',
+          '@id': `${SITE_URL}/#org`,
+          name: 'ClearanceGate',
+          url: SITE_URL,
+          logo: DEFAULT_IMAGE,
+        },
+        {
+          '@type': type === 'article' ? 'Article' : 'WebSite',
+          '@id': `${canonicalUrl}#page`,
+          url: canonicalUrl,
+          name: fullTitle,
+          description,
+          inLanguage: locale,
+          publisher: { '@id': `${SITE_URL}/#org` },
+          image: DEFAULT_IMAGE,
+        },
+      ],
+    })
   }
 
   onMounted(() => {
     apply()
     watch(
-      () => [asValue(input.title), asValue(input.description), input.path ? asValue(input.path) : '/'],
+      () => [asValue(input.title), asValue(input.description), input.path ? asValue(input.path) : '/', input.type ? asValue(input.type) : 'website'],
       () => apply(),
     )
   })
