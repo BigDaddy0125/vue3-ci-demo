@@ -112,6 +112,48 @@ const docDescription = computed(() => {
   return lines.join(' ').slice(0, 170)
 })
 
+const localizeTrack = (track) => {
+  if (activeLocale.value !== 'ja') return track
+  return {
+    All: 'すべて',
+    Core: '中核',
+    Engineering: '技術',
+    Operations: '運用',
+    Business: '事業',
+  }[track] || track
+}
+
+const localizeStatus = (status) => {
+  if (activeLocale.value !== 'ja') return status
+  return {
+    Draft: '草案',
+    'In Progress': '作成中',
+    'Pilot Ready': 'パイロット準備完了',
+    Published: '公開済み',
+  }[status] || status
+}
+
+const localizeAudience = (audience) => {
+  if (activeLocale.value !== 'ja') return audience
+  return {
+    Leadership: '経営',
+    Investors: '投資家',
+    Partners: 'パートナー',
+    'Internal Team': '社内チーム',
+    Developers: '開発者',
+    Customers: '顧客',
+    Sales: '営業',
+  }[audience] || audience
+}
+
+const localizeConfidentiality = (value) => {
+  if (activeLocale.value !== 'ja') return value
+  return {
+    Public: '公開',
+    Internal: '社内限定',
+  }[value] || value
+}
+
 useSeo({
   title: computed(() => activeDoc.value.title),
   description: docDescription,
@@ -122,26 +164,33 @@ useSeo({
 const copy = computed(() => {
   if (activeLocale.value === 'ja') {
     return {
-      home: 'Home',
-      docs: 'Docs',
-      badge: 'Documentation Hub',
+      home: 'ホーム',
+      docs: '文書',
+      badge: 'ドキュメントハブ',
       intro: '技術・運用・事業ドキュメントを同一モデルで検索し、導入判断に使える形で提示します。',
       searchLabel: 'ドキュメント検索',
       searchPlaceholder: 'タイトル・slug・要約で検索',
-      filterLabel: 'Track Filter',
+      filterLabel: 'トラックで絞り込み',
       noResults: '一致するドキュメントがありません。',
-      document: 'Document',
-      minutesRead: 'min read',
-      minuteShort: 'min',
-      sections: 'sections',
-      lines: 'lines',
-      outline: 'Section Outline',
-      sourceTitle: 'Source Of Truth',
+      document: 'ドキュメント',
+      minutesRead: '分で読めます',
+      minuteShort: '分',
+      sections: 'セクション',
+      lines: '行',
+      outline: 'セクション一覧',
+      sourceTitle: '正本ソース',
       sourceBody: '原本は Notion の ClearanceGate Documentation です。このサイトは公開運用向けビューです。',
-      sourceCta: 'Open Notion Source',
-      metadata: 'Document Metadata',
-      related: 'Related Documents',
-      startPilot: 'Start Pilot From This Doc Set',
+      sourceCta: 'Notion 正本を開く',
+      metadata: 'ドキュメント情報',
+      metaLabels: {
+        track: 'トラック',
+        status: 'ステータス',
+        audience: '対象読者',
+        confidentiality: '公開範囲',
+        updatedAt: '最終更新',
+      },
+      related: '関連ドキュメント',
+      startPilot: 'この文書セットからパイロットを開始',
     }
   }
 
@@ -164,6 +213,13 @@ const copy = computed(() => {
     sourceBody: 'The canonical source remains the Notion-based ClearanceGate Documentation. This site provides a release-ready public surface.',
     sourceCta: 'Open Notion Source',
     metadata: 'Document Metadata',
+    metaLabels: {
+      track: 'Track',
+      status: 'Status',
+      audience: 'Audience',
+      confidentiality: 'Confidentiality',
+      updatedAt: 'Last Updated',
+    },
     related: 'Related Documents',
     startPilot: 'Start Pilot From This Doc Set',
   }
@@ -214,7 +270,7 @@ watch(
             :class="{ active: activeTrack === track }"
             @click="activeTrack = track"
           >
-            {{ track }}
+            {{ localizeTrack(track) }}
           </button>
         </div>
 
@@ -227,7 +283,9 @@ watch(
             :to="{ name: 'doc', params: { locale: activeLocale, slug: item.slug } }"
           >
             <span class="cg-doc-link-title">{{ item.title }}</span>
-            <span class="cg-doc-link-meta">{{ docsContent[item.slug]?.track }} / {{ docStatsMap[item.slug]?.minutes || 1 }} {{ copy.minuteShort }}</span>
+            <span class="cg-doc-link-meta"
+              >{{ localizeTrack(docsContent[item.slug]?.track) }} / {{ docStatsMap[item.slug]?.minutes || 1 }} {{ copy.minuteShort }}</span
+            >
           </RouterLink>
           <p v-if="filteredNav.length === 0" class="cg-doc-empty">{{ copy.noResults }}</p>
         </nav>
@@ -239,8 +297,8 @@ watch(
           <h1>{{ activeDoc.title }}</h1>
           <p class="cg-doc-header-copy">{{ activeDoc.summary }}</p>
           <div class="cg-chip-row">
-            <span class="cg-chip">{{ activeDoc.track }}</span>
-            <span class="cg-chip">{{ activeDoc.status }}</span>
+            <span class="cg-chip">{{ localizeTrack(activeDoc.track) }}</span>
+            <span class="cg-chip">{{ localizeStatus(activeDoc.status) }}</span>
             <span class="cg-chip">{{ activeStats.minutes }} {{ copy.minutesRead }}</span>
             <span class="cg-chip">{{ activeDoc.sections.length }} {{ copy.sections }}</span>
             <span class="cg-chip">{{ activeStats.lines }} {{ copy.lines }}</span>
@@ -264,23 +322,23 @@ watch(
           <h2>{{ copy.metadata }}</h2>
           <dl class="cg-meta-list">
             <div class="cg-meta-item">
-              <dt>Track</dt>
-              <dd>{{ activeDoc.track }}</dd>
+              <dt>{{ copy.metaLabels.track }}</dt>
+              <dd>{{ localizeTrack(activeDoc.track) }}</dd>
             </div>
             <div class="cg-meta-item">
-              <dt>Status</dt>
-              <dd>{{ activeDoc.status }}</dd>
+              <dt>{{ copy.metaLabels.status }}</dt>
+              <dd>{{ localizeStatus(activeDoc.status) }}</dd>
             </div>
             <div class="cg-meta-item">
-              <dt>Audience</dt>
-              <dd>{{ activeDoc.audience.join(', ') }}</dd>
+              <dt>{{ copy.metaLabels.audience }}</dt>
+              <dd>{{ activeDoc.audience.map(localizeAudience).join(', ') }}</dd>
             </div>
             <div class="cg-meta-item">
-              <dt>Confidentiality</dt>
-              <dd>{{ activeDoc.confidentiality }}</dd>
+              <dt>{{ copy.metaLabels.confidentiality }}</dt>
+              <dd>{{ localizeConfidentiality(activeDoc.confidentiality) }}</dd>
             </div>
             <div class="cg-meta-item">
-              <dt>Last Updated</dt>
+              <dt>{{ copy.metaLabels.updatedAt }}</dt>
               <dd>{{ activeDoc.lastUpdated }}</dd>
             </div>
           </dl>

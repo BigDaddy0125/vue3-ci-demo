@@ -90,51 +90,89 @@ const pilotPhases = computed(() => {
   return text.split('. ').filter(Boolean)
 })
 
+const localizeTrack = (track) => {
+  if (activeLocale.value !== 'ja') return track
+  return {
+    Core: '中核',
+    Engineering: '技術',
+    Operations: '運用',
+    Business: '事業',
+  }[track] || track
+}
+
+const localizeStatus = (status) => {
+  if (activeLocale.value !== 'ja') return status
+  return {
+    Draft: '草案',
+    'In Progress': '作成中',
+    'Pilot Ready': 'パイロット準備完了',
+    Published: '公開済み',
+  }[status] || status
+}
+
 const copy = computed(() => {
   if (activeLocale.value === 'ja') {
     return {
       nav: {
-        guarantees: 'Guarantees',
-        docs: 'Docs',
-        market: 'Market',
-        pilot: 'Pilot',
+        guarantees: '保証',
+        docs: '文書',
+        market: '市場',
+        pilot: '導入',
         faq: 'FAQ',
       },
       hero: {
-        badge: 'ClearanceGate Documentation',
-        title: 'Authorization Before Execution',
+        badge: 'ClearanceGate ドキュメント',
+        title: '実行前認可',
         subtitle: '実行直前で認可を強制するガバナンス境界',
         body: 'ClearanceGate は高リスク実行の直前で、決定論的な認可結果を返します。曖昧な責任状態を排除し、監査説明可能性を運用の前提にします。',
-        primary: 'Start Pilot',
-        secondary: 'Read Documentation',
+        primary: 'パイロットを開始',
+        secondary: 'ドキュメントを読む',
+        metrics: {
+          publishedDocs: '公開文書',
+          docSections: '文書セクション',
+          outcomes: '認可結果',
+          publishedSpecs: '公開仕様',
+        },
+        panel: {
+          kicker: '認可エンベロープ',
+          input: '入力: 意思決定リクエスト',
+          kernel: 'カーネル: 制約 + 状態遷移',
+          output: '出力: PROCEED | BLOCK | REQUIRE_ACK | DEGRADE',
+        },
       },
       guarantees: {
-        eyebrow: 'Core',
-        title: 'Core Guarantees',
+        eyebrow: '中核',
+        title: '中核保証',
         lead: 'システム憲章と状態機械に基づく中核保証。',
+        invariant: '不変条件',
       },
       docs: {
-        eyebrow: 'Documentation Coverage',
+        eyebrow: 'ドキュメント範囲',
         title: '技術・運用・事業資料を一体化したドキュメント基盤',
         body: 'Notion を正本にしながら、公開サイトで導入判断に必要な情報を段階的に提示します。',
-        all: 'Open all documents',
-        source: 'Notion Source',
+        trackSummary: 'アーキテクチャ、ポリシー意味論、ロールアウト運用までをカバーします。',
+        read: '文書を開く',
+        openBrief: '概要を見る',
+        documentsSuffix: '件の文書',
+        all: 'すべての文書を見る',
+        source: 'Notion 正本',
       },
       market: {
-        eyebrow: 'Market Intelligence',
+        eyebrow: '市場分析',
         title: '市場機会・競争・財務計画を公開',
       },
       usecases: {
-        eyebrow: 'Use Cases',
+        eyebrow: '導入例',
         title: '高説明責任領域での導入パターン',
       },
       readiness: {
-        eyebrow: 'Launch Readiness',
+        eyebrow: '導入準備',
         title: '本番導入に必要な運用ガードレール',
       },
       pilot: {
-        eyebrow: 'Pilot Plan',
+        eyebrow: '導入計画',
         title: '6週間パイロットで構造的安全性を検証',
+        phase: 'フェーズ',
       },
       faq: {
         eyebrow: 'FAQ',
@@ -155,15 +193,15 @@ const copy = computed(() => {
         ],
       },
       cta: {
-        eyebrow: 'Next Step',
+        eyebrow: '次のステップ',
         title: '限定スコープで Pilot を開始し、運用適合性を確認',
-        primary: 'Start Pilot',
-        secondary: 'Explore Docs',
+        primary: 'パイロットを開始',
+        secondary: '文書を確認',
       },
       affiliation: {
         title: '運営主体',
         text: 'ClearanceGate は 石竹株式会社（Ishitake Co., Ltd.）が企画・開発・運営しています。',
-        link: 'Visit Ishitake Corporate Site',
+        link: '石竹株式会社のサイトへ',
       },
     }
   }
@@ -183,16 +221,33 @@ const copy = computed(() => {
       body: 'ClearanceGate enforces deterministic authorization right before execution. It removes ambiguous accountability paths and turns auditability into a runtime requirement.',
       primary: 'Start Pilot',
       secondary: 'Read Documentation',
+      metrics: {
+        publishedDocs: 'Published Docs',
+        docSections: 'Documentation Sections',
+        outcomes: 'Authorization Outcomes',
+        publishedSpecs: 'Published Specs',
+      },
+      panel: {
+        kicker: 'Authorization Envelope',
+        input: 'INPUT: Decision Proposal',
+        kernel: 'KERNEL: Constraint + State Transition',
+        output: 'OUTPUT: PROCEED | BLOCK | REQUIRE_ACK | DEGRADE',
+      },
     },
     guarantees: {
       eyebrow: 'Core',
       title: 'Core Guarantees',
       lead: 'Kernel-level invariants from constitution, state machine, and formal verification scope.',
+      invariant: 'Invariant',
     },
     docs: {
       eyebrow: 'Documentation Coverage',
       title: 'A Unified Launch-Ready Documentation Surface',
       body: 'Engineering, operations, and business documents are exposed in one coherent public documentation stack.',
+      trackSummary: 'Coverage includes architecture, policy semantics, and rollout operations.',
+      read: 'Read document',
+      openBrief: 'Open brief',
+      documentsSuffix: 'documents',
       all: 'Open all documents',
       source: 'Notion Source',
     },
@@ -211,6 +266,7 @@ const copy = computed(() => {
     pilot: {
       eyebrow: 'Pilot Plan',
       title: 'Validate Structural Safety In A Six-Week Pilot',
+      phase: 'Phase',
     },
     faq: {
       eyebrow: 'FAQ',
@@ -264,24 +320,47 @@ const guarantees = computed(() => [
 ])
 
 const useCases = computed(() => [
-  {
-    title: 'Quant Finance',
-    text: 'Authorize strategy go-live, pause, and kill-switch execution under explicit accountability.',
-    image: usecaseFinance,
-    alt: 'Quant finance use case',
-  },
-  {
-    title: 'Enterprise IT Operations',
-    text: 'Gate production deployments and operational changes before irreversible execution.',
-    image: usecaseItops,
-    alt: 'Enterprise IT operations use case',
-  },
-  {
-    title: 'Industrial Automation',
-    text: 'Apply action-level clearance in safety-critical systems where failure cost is high.',
-    image: usecaseIndustrial,
-    alt: 'Industrial automation use case',
-  },
+  ...(activeLocale.value === 'ja'
+    ? [
+        {
+          title: 'クオンツ金融',
+          text: '戦略稼働、停止、キルスイッチ実行を明示的な責任境界のもとで認可します。',
+          image: usecaseFinance,
+          alt: 'クオンツ金融のユースケース',
+        },
+        {
+          title: 'エンタープライズ IT 運用',
+          text: '本番デプロイや運用変更を不可逆な実行の直前でゲートします。',
+          image: usecaseItops,
+          alt: 'エンタープライズ IT 運用のユースケース',
+        },
+        {
+          title: '産業オートメーション',
+          text: '失敗コストの高い安全重要システムで、アクション単位のクリアランスを適用します。',
+          image: usecaseIndustrial,
+          alt: '産業オートメーションのユースケース',
+        },
+      ]
+    : [
+        {
+          title: 'Quant Finance',
+          text: 'Authorize strategy go-live, pause, and kill-switch execution under explicit accountability.',
+          image: usecaseFinance,
+          alt: 'Quant finance use case',
+        },
+        {
+          title: 'Enterprise IT Operations',
+          text: 'Gate production deployments and operational changes before irreversible execution.',
+          image: usecaseItops,
+          alt: 'Enterprise IT operations use case',
+        },
+        {
+          title: 'Industrial Automation',
+          text: 'Apply action-level clearance in safety-critical systems where failure cost is high.',
+          image: usecaseIndustrial,
+          alt: 'Industrial automation use case',
+        },
+      ]),
 ])
 
 const seoCopy = computed(() => ({
@@ -375,28 +454,28 @@ watch(
             <div class="cg-metric-strip">
               <article class="cg-metric-item">
                 <p class="cg-metric-value">{{ docsNav.length }}</p>
-                <p class="cg-metric-label">Published Docs</p>
+                <p class="cg-metric-label">{{ copy.hero.metrics.publishedDocs }}</p>
               </article>
               <article class="cg-metric-item">
                 <p class="cg-metric-value">{{ docsTotalSections }}</p>
-                <p class="cg-metric-label">Documentation Sections</p>
+                <p class="cg-metric-label">{{ copy.hero.metrics.docSections }}</p>
               </article>
               <article class="cg-metric-item">
                 <p class="cg-metric-value">4</p>
-                <p class="cg-metric-label">Authorization Outcomes</p>
+                <p class="cg-metric-label">{{ copy.hero.metrics.outcomes }}</p>
               </article>
               <article class="cg-metric-item">
                 <p class="cg-metric-value">{{ statusMetrics.find((item) => item.status === 'Published')?.count || 0 }}</p>
-                <p class="cg-metric-label">Published Specs</p>
+                <p class="cg-metric-label">{{ copy.hero.metrics.publishedSpecs }}</p>
               </article>
             </div>
           </div>
 
           <aside class="cg-hero-panel">
-            <p class="cg-card-kicker">Authorization Envelope</p>
-            <p class="cg-panel-line">INPUT: Decision Proposal</p>
-            <p class="cg-panel-line">KERNEL: Constraint + State Transition</p>
-            <p class="cg-panel-line">OUTPUT: PROCEED | BLOCK | REQUIRE_ACK | DEGRADE</p>
+            <p class="cg-card-kicker">{{ copy.hero.panel.kicker }}</p>
+            <p class="cg-panel-line">{{ copy.hero.panel.input }}</p>
+            <p class="cg-panel-line">{{ copy.hero.panel.kernel }}</p>
+            <p class="cg-panel-line">{{ copy.hero.panel.output }}</p>
             <div class="cg-outcomes">
               <span class="cg-outcome success">PROCEED</span>
               <span class="cg-outcome danger">BLOCK</span>
@@ -416,7 +495,7 @@ watch(
           </header>
           <div class="cg-guarantee-grid">
             <article v-for="item in guarantees" :key="item.title" class="cg-card">
-              <p class="cg-card-kicker">Invariant</p>
+              <p class="cg-card-kicker">{{ copy.guarantees.invariant }}</p>
               <h3 class="cg-card-title">{{ item.title }}</h3>
               <p class="cg-card-body">{{ item.body }}</p>
             </article>
@@ -433,18 +512,18 @@ watch(
           </header>
           <div class="cg-track-grid">
             <article v-for="item in trackMetrics" :key="item.track" class="cg-card cg-track-card">
-              <p class="cg-card-kicker">{{ item.track }}</p>
-              <h3 class="cg-card-title">{{ item.count }} documents</h3>
-              <p class="cg-card-body">Coverage includes architecture, policy semantics, and rollout operations.</p>
+              <p class="cg-card-kicker">{{ localizeTrack(item.track) }}</p>
+              <h3 class="cg-card-title">{{ item.count }} {{ copy.docs.documentsSuffix }}</h3>
+              <p class="cg-card-body">{{ copy.docs.trackSummary }}</p>
             </article>
           </div>
           <div class="cg-doc-grid">
             <article v-for="doc in featuredDocs" :key="doc.slug" class="cg-card cg-doc-card">
-              <p class="cg-doc-heading">{{ doc.track }} / {{ doc.status }}</p>
+              <p class="cg-doc-heading">{{ localizeTrack(doc.track) }} / {{ localizeStatus(doc.status) }}</p>
               <h3 class="cg-card-title">{{ doc.title }}</h3>
               <p class="cg-card-body">{{ doc.summary }}</p>
               <RouterLink class="cg-btn cg-btn-link" :to="{ name: 'doc', params: { locale: activeLocale, slug: doc.slug } }">
-                Read document
+                {{ copy.docs.read }}
               </RouterLink>
             </article>
           </div>
@@ -465,12 +544,12 @@ watch(
           </header>
           <div class="cg-business-grid">
             <article v-for="doc in businessDocs" :key="doc.slug" class="cg-card cg-business-card">
-              <p class="cg-doc-heading">{{ doc.status }}</p>
+              <p class="cg-doc-heading">{{ localizeStatus(doc.status) }}</p>
               <h3 class="cg-card-title">{{ doc.title }}</h3>
               <p class="cg-card-body">{{ doc.summary }}</p>
               <p class="cg-card-body">{{ doc.sections[0]?.body?.[0] }}</p>
               <RouterLink class="cg-btn cg-btn-link" :to="{ name: 'doc', params: { locale: activeLocale, slug: doc.slug } }">
-                Open brief
+                {{ copy.docs.openBrief }}
               </RouterLink>
             </article>
           </div>
@@ -513,7 +592,7 @@ watch(
           </header>
           <div class="cg-timeline">
             <article v-for="(phase, idx) in pilotPhases" :key="phase" class="cg-card cg-timeline-step">
-              <p class="cg-step-index">Phase {{ idx + 1 }}</p>
+              <p class="cg-step-index">{{ copy.pilot.phase }} {{ idx + 1 }}</p>
               <p class="cg-card-body">{{ phase }}</p>
             </article>
           </div>
