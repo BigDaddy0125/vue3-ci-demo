@@ -444,6 +444,8 @@ body {
   font-size: clamp(1.5rem, 2.8vw, 2.2rem);
   letter-spacing: -0.01em;
   line-height: 1.2;
+  text-wrap: balance;
+  max-width: 24ch;
 }
 
 .cg-section-head p {
