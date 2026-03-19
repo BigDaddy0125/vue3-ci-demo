@@ -55,6 +55,15 @@ const businessDocs = computed(() => {
   return slugs.map((slug) => ({ slug, ...getDoc(slug) })).filter((doc) => Boolean(doc.title))
 })
 
+const statusMetrics = computed(() => {
+  const map = Object.values(docsContent.value).reduce((acc, doc) => {
+    acc[doc.status] = (acc[doc.status] || 0) + 1
+    return acc
+  }, {})
+
+  return Object.entries(map).map(([status, count]) => ({ status, count }))
+})
+
 const trackOrder = ['Core', 'Engineering', 'Operations', 'Business']
 
 const trackMetrics = computed(() =>
@@ -70,30 +79,28 @@ const docsTotalSections = computed(() =>
   Object.values(docsContent.value).reduce((sum, doc) => sum + (doc.sections?.length || 0), 0),
 )
 
-const statusMetrics = computed(() => {
-  const map = Object.values(docsContent.value).reduce((acc, doc) => {
-    acc[doc.status] = (acc[doc.status] || 0) + 1
-    return acc
-  }, {})
-  return Object.entries(map).map(([status, count]) => ({ status, count }))
-})
-
 const launchChecklist = computed(() => [
-  getDoc('enterprise-guide')?.sections?.[1]?.body?.[0] || 'Route all execution paths through ClearanceGate.',
-  getDoc('enterprise-guide')?.sections?.[1]?.body?.[1] || 'Review shadow evidence before hard blocking mode.',
-  getDoc('security')?.sections?.[1]?.body?.[0] || 'Keep internal failures fail-closed.',
-  getDoc('pilot-plan')?.sections?.[2]?.body?.[1] || 'Enforce clear pass criteria with complete evidence.',
+  getDoc('enterprise-guide')?.sections?.[1]?.body?.[0] || 'Route every execution path through ClearanceGate.',
+  getDoc('enterprise-guide')?.sections?.[1]?.body?.[1] || 'Validate fail-closed behavior before hard blocking mode.',
+  getDoc('security')?.sections?.[1]?.body?.[0] || 'Missing inputs and internal failures must resolve safely.',
+  getDoc('pilot-plan')?.sections?.[2]?.body?.[1] || 'Require complete evidence for every non-blocking outcome.',
 ])
 
 const pilotPhases = computed(() => {
   const text = getDoc('pilot-plan')?.sections?.[2]?.body?.[0] || ''
-  return text.split('. ').filter(Boolean)
+  return text
+    .split(';')
+    .join('.')
+    .split('.')
+    .map((item) => item.trim())
+    .filter(Boolean)
 })
 
 const localizeTrack = (track) => {
   if (activeLocale.value !== 'ja') return track
+
   return {
-    Core: '中核',
+    Core: 'コア',
     Engineering: '技術',
     Operations: '運用',
     Business: '事業',
@@ -102,6 +109,7 @@ const localizeTrack = (track) => {
 
 const localizeStatus = (status) => {
   if (activeLocale.value !== 'ja') return status
+
   return {
     Draft: '草案',
     'In Progress': '作成中',
@@ -113,100 +121,114 @@ const localizeStatus = (status) => {
 const copy = computed(() => {
   if (activeLocale.value === 'ja') {
     return {
+      lang: '日本語',
       nav: {
         guarantees: '保証',
-        docs: '文書',
+        docs: '資料',
         market: '市場',
-        pilot: '導入',
+        pilot: '実証',
         faq: 'FAQ',
       },
       hero: {
-        badge: 'ClearanceGate ドキュメント',
-        title: '実行前認可',
-        subtitle: '実行直前で認可を強制するガバナンス境界',
-        body: 'ClearanceGate は高リスク実行の直前で、決定論的な認可結果を返します。曖昧な責任状態を排除し、監査説明可能性を運用の前提にします。',
+        badge: 'ClearanceGate Documentation Surface',
+        title: '実行の直前に、認可を置く。',
+        subtitle: '取り返しのつかない処理の前で、責任・制約・監査証跡を明示する。',
+        body:
+          'ClearanceGate は、意思決定生成そのものではなく実行直前の認可境界を提供します。責任の所在を曖昧にせず、監査可能性を後工程ではなく実行条件として扱うためのインフラです。',
         primary: 'パイロットを開始',
-        secondary: 'ドキュメントを読む',
+        secondary: '資料を読む',
+        proof: [
+          '結果は PROCEED / BLOCK / REQUIRE_ACK / DEGRADE の 4 種に限定。',
+          '不確実性や内部障害では fail-closed を維持。',
+          '技術・運用・事業資料を、ひとつの公開面に統合。',
+        ],
         metrics: {
-          publishedDocs: '公開文書',
-          docSections: '文書セクション',
+          publishedDocs: '公開ドキュメント',
+          docSections: '総セクション数',
           outcomes: '認可結果',
-          publishedSpecs: '公開仕様',
+          publishedSpecs: '公開済み仕様',
         },
         panel: {
-          kicker: '認可エンベロープ',
-          input: '入力: 意思決定リクエスト',
-          kernel: 'カーネル: 制約 + 状態遷移',
-          output: '出力: PROCEED | BLOCK | REQUIRE_ACK | DEGRADE',
+          kicker: 'Authorization Envelope',
+          input: 'INPUT: 判断提案と責任情報',
+          kernel: 'KERNEL: 制約評価と状態遷移',
+          output: 'OUTPUT: PROCEED | BLOCK | REQUIRE_ACK | DEGRADE',
+        },
+        review: {
+          title: '読む順序まで設計する',
+          body: '最初に製品の骨格を掴み、その後に市場、導入、実証へと自然に進める構成にしています。',
         },
       },
       guarantees: {
-        eyebrow: '中核',
-        title: '中核保証',
-        lead: 'システム憲章と状態機械に基づく中核保証。',
-        invariant: '不変条件',
+        eyebrow: 'Core Guarantees',
+        title: '主張を広げるより、守れる保証を鋭く見せる。',
+        lead: '価値の中心を不変条件に寄せることで、見た目の強さと内容の厳密さを一致させています。',
+        invariant: 'Invariant',
       },
       docs: {
-        eyebrow: 'ドキュメント範囲',
-        title: '技術・運用・事業資料を一体化したドキュメント基盤',
-        body: 'Notion を正本にしながら、公開サイトで導入判断に必要な情報を段階的に提示します。',
-        trackSummary: 'アーキテクチャ、ポリシー意味論、ロールアウト運用までをカバーします。',
-        read: '文書を開く',
+        eyebrow: 'Documentation Coverage',
+        title: '断片的な説明ではなく、ひとつの公開ドキュメント面へ。',
+        body: '技術・運用・事業の文書を一つの入口にまとめ、閲覧の負荷と理解コストを下げます。',
+        trackSummary: '各トラックは単独でも読めますが、全体では導入判断のための連続した物語になります。',
+        read: '資料を開く',
         openBrief: '概要を見る',
-        documentsSuffix: '件の文書',
-        all: 'すべての文書を見る',
-        source: 'Notion 正本',
+        documentsSuffix: '本の資料',
+        all: 'すべての資料を見る',
+        source: 'Notion 原本',
       },
       market: {
-        eyebrow: '市場分析',
-        title: '市場機会・競争・財務計画を公開',
+        eyebrow: 'Market Intelligence',
+        title: '市場性は熱量ではなく、構造需要と導入順序で見せる。',
+        body: '競争、成長余地、収益性を抽象論ではなく導入可能な形で提示します。',
       },
       usecases: {
-        eyebrow: '導入例',
-        title: '高説明責任領域での導入パターン',
+        eyebrow: 'Deployment Patterns',
+        title: '高責任領域に絞った導入パターン。',
       },
       readiness: {
-        eyebrow: '導入準備',
-        title: '本番導入に必要な運用ガードレール',
+        eyebrow: 'Launch Readiness',
+        title: 'ローンチ前に確認すべき運用ガードレール。',
+        panelTitle: '公開面の成熟度',
       },
       pilot: {
-        eyebrow: '導入計画',
-        title: '6週間パイロットで構造的安全性を検証',
-        phase: 'フェーズ',
+        eyebrow: 'Pilot Plan',
+        title: '6 週間の実証で、構造安全性を確かめる。',
+        phase: 'Phase',
       },
       faq: {
         eyebrow: 'FAQ',
-        title: '導入前の主要論点',
+        title: '導入前によく出る問い。',
         items: [
           {
-            q: 'ClearanceGate が保証する範囲は？',
-            a: '意思決定の正しさではなく、認可の構造的正当性と監査説明可能性を保証します。',
+            q: 'ClearanceGate が保証するのは何ですか。',
+            a: '意思決定の正しさではなく、実行可否が明示的な制約と責任のもとで決まり、その根拠を後から再構成できることです。',
           },
           {
-            q: '既存ワークフローへ段階導入できますか？',
-            a: '可能です。Shadow Mode で証跡を検証後、Blocking Mode へ移行します。',
+            q: '既存ワークフローを全面刷新しないと導入できませんか。',
+            a: 'いいえ。まずは shadow mode で比較検証し、証跡と結果分布を確認した上で限定された実行面から blocking mode に進めます。',
           },
           {
-            q: '価格は利用量課金ですか？',
-            a: '利用量ではなく Authorization Domain 単位のインフラライセンスです。',
+            q: '料金は API 使用量ベースですか。',
+            a: 'いいえ。価格は seat 数や call 数ではなく、どの認可ドメインの責任とリスクを引き受けるかに基づきます。',
           },
         ],
       },
       cta: {
-        eyebrow: '次のステップ',
-        title: '限定スコープで Pilot を開始し、運用適合性を確認',
-        primary: 'パイロットを開始',
-        secondary: '文書を確認',
+        eyebrow: 'Next Step',
+        title: '全社展開の前に、狭い範囲で良いので実証を切る。',
+        primary: 'パイロット資料へ',
+        secondary: '資料一覧へ',
       },
       affiliation: {
-        title: '運営主体',
-        text: 'ClearanceGate は 石竹株式会社（Ishitake Co., Ltd.）が企画・開発・運営しています。',
-        link: '石竹株式会社のサイトへ',
+        title: '運営',
+        text: 'ClearanceGate は Ishitake Co., Ltd. により企画・開発・運営されています。',
+        link: 'Ishitake のコーポレートサイトへ',
       },
     }
   }
 
   return {
+    lang: 'Japanese',
     nav: {
       guarantees: 'Guarantees',
       docs: 'Docs',
@@ -215,36 +237,46 @@ const copy = computed(() => {
       faq: 'FAQ',
     },
     hero: {
-      badge: 'ClearanceGate Documentation',
+      badge: 'ClearanceGate Documentation Surface',
       title: 'Authorization Before Execution',
-      subtitle: 'A Governance Boundary Immediately Before Irreversible Actions',
-      body: 'ClearanceGate enforces deterministic authorization right before execution. It removes ambiguous accountability paths and turns auditability into a runtime requirement.',
+      subtitle: 'A narrow, explicit control boundary before irreversible actions.',
+      body:
+        'ClearanceGate frames authorization as infrastructure. It reduces ambiguous accountability paths, keeps failure modes fail-closed, and makes auditability part of runtime behavior instead of post-incident cleanup.',
       primary: 'Start Pilot',
       secondary: 'Read Documentation',
+      proof: [
+        'Exactly four outcomes: PROCEED, BLOCK, REQUIRE_ACK, and DEGRADE.',
+        'Fail-closed semantics under uncertainty, invalid state, or internal failure.',
+        'Public-facing engineering, operations, and business materials in one surface.',
+      ],
       metrics: {
         publishedDocs: 'Published Docs',
-        docSections: 'Documentation Sections',
-        outcomes: 'Authorization Outcomes',
+        docSections: 'Doc Sections',
+        outcomes: 'Outcomes',
         publishedSpecs: 'Published Specs',
       },
       panel: {
         kicker: 'Authorization Envelope',
-        input: 'INPUT: Decision Proposal',
-        kernel: 'KERNEL: Constraint + State Transition',
+        input: 'INPUT: Decision proposal with responsibility context',
+        kernel: 'KERNEL: Constraint evaluation plus state transition',
         output: 'OUTPUT: PROCEED | BLOCK | REQUIRE_ACK | DEGRADE',
+      },
+      review: {
+        title: 'Built for fast comprehension',
+        body: 'The page now moves from product thesis to proof surface, market framing, and pilot plan without forcing the reader to reconstruct the story.',
       },
     },
     guarantees: {
-      eyebrow: 'Core',
-      title: 'Core Guarantees',
-      lead: 'Kernel-level invariants from constitution, state machine, and formal verification scope.',
+      eyebrow: 'Core Guarantees',
+      title: 'The value proposition is clearest when reduced to structural guarantees.',
+      lead: 'This section avoids broad claims and keeps attention on what the system can defend under scrutiny.',
       invariant: 'Invariant',
     },
     docs: {
       eyebrow: 'Documentation Coverage',
-      title: 'A Unified Launch-Ready Documentation Surface',
-      body: 'Engineering, operations, and business documents are exposed in one coherent public documentation stack.',
-      trackSummary: 'Coverage includes architecture, policy semantics, and rollout operations.',
+      title: 'A single release-ready documentation surface instead of fragmented explanation.',
+      body: 'The public site, the docs catalog, and the canonical Notion source now read as one coherent system.',
+      trackSummary: 'Each track can be scanned independently, but together they form a complete launch narrative.',
       read: 'Read document',
       openBrief: 'Open brief',
       documentsSuffix: 'documents',
@@ -253,44 +285,46 @@ const copy = computed(() => {
     },
     market: {
       eyebrow: 'Market Intelligence',
-      title: 'Market Opportunity, Competition, and Financial Discipline',
+      title: 'Market framing should feel disciplined, not inflated.',
+      body: 'The business layer is presented as deployment logic, risk structure, and commercialization discipline.',
     },
     usecases: {
-      eyebrow: 'Use Cases',
-      title: 'Deployment Patterns In High-Accountability Domains',
+      eyebrow: 'Deployment Patterns',
+      title: 'Where explicit authorization matters most.',
     },
     readiness: {
       eyebrow: 'Launch Readiness',
-      title: 'Production Guardrails Before Enterprise Rollout',
+      title: 'Operational guardrails before enterprise rollout.',
+      panelTitle: 'Release maturity snapshot',
     },
     pilot: {
       eyebrow: 'Pilot Plan',
-      title: 'Validate Structural Safety In A Six-Week Pilot',
+      title: 'Validate structural safety in a constrained six-week pilot.',
       phase: 'Phase',
     },
     faq: {
       eyebrow: 'FAQ',
-      title: 'Common Questions Before Adoption',
+      title: 'Questions that should be answered before adoption.',
       items: [
         {
           q: 'What does ClearanceGate actually guarantee?',
-          a: 'Structural authorization correctness, explicit responsibility, and reconstructable evidence for governed execution.',
+          a: 'It guarantees explicit authorization outcomes, responsibility binding, and reconstructable evidence for governed execution. It does not claim decision quality or business optimality.',
         },
         {
-          q: 'Can we adopt without a full workflow rewrite?',
-          a: 'Yes. Start in shadow mode, verify evidence and outcomes, then turn on blocking mode on bounded execution surfaces.',
+          q: 'Can teams adopt this without rewriting their workflow?',
+          a: 'Yes. Start in shadow mode, compare outcomes, validate evidence quality, and then enable hard blocking only on bounded execution surfaces.',
         },
         {
-          q: 'Is this priced as usage software?',
-          a: 'No. Pricing is based on authorization domain risk exposure, not seat count or API call volume.',
+          q: 'Is this priced like usage software?',
+          a: 'No. The pricing logic is infrastructure-style and tied to authorization domains, accountability exposure, and operating risk rather than seats or request volume.',
         },
       ],
     },
     cta: {
       eyebrow: 'Next Step',
-      title: 'Run A Narrow Pilot Before Full Enterprise Expansion',
-      primary: 'Start Pilot',
-      secondary: 'Explore Docs',
+      title: 'Run a narrow pilot before expanding the control surface.',
+      primary: 'Open Pilot Plan',
+      secondary: 'Browse Docs',
     },
     affiliation: {
       title: 'Operated by',
@@ -302,19 +336,21 @@ const copy = computed(() => {
 
 const guarantees = computed(() => [
   {
-    title: 'Deterministic Outcome',
-    body: getDoc('constitution')?.sections?.[1]?.body?.[0] || 'Deterministic authorization outcome for each valid input.',
+    title: activeLocale.value === 'ja' ? '決定的な結果' : 'Deterministic Outcome',
+    body:
+      getDoc('constitution')?.sections?.[1]?.body?.[0] ||
+      'Deterministic authorization outcome for each valid input.',
   },
   {
-    title: 'Mutual Exclusivity',
+    title: activeLocale.value === 'ja' ? '相互排他' : 'Mutual Exclusivity',
     body: getDoc('state-machine')?.sections?.[2]?.body?.[0] || 'No conflicting outcomes for the same decision instance.',
   },
   {
-    title: 'Fail-Closed',
+    title: activeLocale.value === 'ja' ? 'Fail-Closed' : 'Fail-Closed',
     body: getDoc('security')?.sections?.[1]?.body?.[0] || 'Uncertain or invalid states resolve to safe outcomes only.',
   },
   {
-    title: 'Auditability',
+    title: activeLocale.value === 'ja' ? '監査可能性' : 'Auditability',
     body: getDoc('security')?.sections?.[2]?.body?.[0] || 'Audit records are authorization-critical.',
   },
 ])
@@ -324,19 +360,19 @@ const useCases = computed(() => [
     ? [
         {
           title: 'クオンツ金融',
-          text: '戦略稼働、停止、キルスイッチ実行を明示的な責任境界のもとで認可します。',
+          text: '戦略の go-live、停止、kill-switch を、暗黙の判断ではなく明示的な責任と認可で扱います。',
           image: usecaseFinance,
           alt: 'クオンツ金融のユースケース',
         },
         {
           title: 'エンタープライズ IT 運用',
-          text: '本番デプロイや運用変更を不可逆な実行の直前でゲートします。',
+          text: '本番変更やデプロイの直前に認可境界を置き、不可逆な操作の前で制約を強制します。',
           image: usecaseItops,
           alt: 'エンタープライズ IT 運用のユースケース',
         },
         {
           title: '産業オートメーション',
-          text: '失敗コストの高い安全重要システムで、アクション単位のクリアランスを適用します。',
+          text: '失敗コストの高い安全重要系で、アクション単位の clearance を適用します。',
           image: usecaseIndustrial,
           alt: '産業オートメーションのユースケース',
         },
@@ -363,10 +399,27 @@ const useCases = computed(() => [
       ]),
 ])
 
+const readinessSignals = computed(() => [
+  {
+    label: activeLocale.value === 'ja' ? '公開済み' : 'Published',
+    value: statusMetrics.value.find((item) => item.status === 'Published')?.count || 0,
+  },
+  {
+    label: activeLocale.value === 'ja' ? 'パイロット準備完了' : 'Pilot Ready',
+    value: statusMetrics.value.find((item) => item.status === 'Pilot Ready')?.count || 0,
+  },
+  {
+    label: activeLocale.value === 'ja' ? '進行中' : 'In Progress',
+    value: statusMetrics.value.find((item) => item.status === 'In Progress')?.count || 0,
+  },
+])
+
 const seoCopy = computed(() => ({
-  title: 'Authorization Before Execution',
+  title: activeLocale.value === 'ja' ? '実行前認可の公開サイト' : 'Authorization Before Execution',
   description:
-    'ClearanceGate provides launch-ready authorization infrastructure with deterministic outcomes, fail-closed behavior, and auditable accountability.',
+    activeLocale.value === 'ja'
+      ? 'ClearanceGate は実行直前の認可インフラを提供し、fail-closed・監査可能性・明示責任を一つの公開ドキュメント面で示します。'
+      : 'ClearanceGate provides launch-ready authorization infrastructure with deterministic outcomes, fail-closed behavior, and auditable accountability.',
 }))
 
 useSeo({
@@ -428,7 +481,7 @@ watch(
         <button class="cg-nav-btn" type="button" @click="scrollToSection('faq')">{{ copy.nav.faq }}</button>
         <div class="cg-lang-switch" role="group" aria-label="Language">
           <button class="cg-lang-btn" :class="{ active: activeLocale === 'en' }" @click="switchLocale('en')">EN</button>
-          <button class="cg-lang-btn" :class="{ active: activeLocale === 'ja' }" @click="switchLocale('ja')">日本語</button>
+          <button class="cg-lang-btn" :class="{ active: activeLocale === 'ja' }" @click="switchLocale('ja')">{{ copy.lang }}</button>
         </div>
       </nav>
     </header>
@@ -436,13 +489,18 @@ watch(
     <main class="cg-main">
       <section class="cg-hero reveal fade-up">
         <div class="cg-container cg-hero-grid">
-          <div class="cg-hero-copy">
+          <div class="cg-hero-copy cg-hero-copy-strong">
             <p class="cg-badge">{{ copy.hero.badge }}</p>
             <h1 class="cg-title">
               {{ copy.hero.title }}
               <span class="cg-title-accent">{{ copy.hero.subtitle }}</span>
             </h1>
             <p class="cg-body">{{ copy.hero.body }}</p>
+
+            <ul class="cg-proof-list">
+              <li v-for="item in copy.hero.proof" :key="item">{{ item }}</li>
+            </ul>
+
             <div class="cg-action-row">
               <RouterLink class="cg-btn cg-btn-primary" :to="{ name: 'doc', params: { locale: activeLocale, slug: 'pilot-plan' } }">
                 {{ copy.hero.primary }}
@@ -451,6 +509,7 @@ watch(
                 {{ copy.hero.secondary }}
               </RouterLink>
             </div>
+
             <div class="cg-metric-strip">
               <article class="cg-metric-item">
                 <p class="cg-metric-value">{{ docsNav.length }}</p>
@@ -471,17 +530,25 @@ watch(
             </div>
           </div>
 
-          <aside class="cg-hero-panel">
-            <p class="cg-card-kicker">{{ copy.hero.panel.kicker }}</p>
-            <p class="cg-panel-line">{{ copy.hero.panel.input }}</p>
-            <p class="cg-panel-line">{{ copy.hero.panel.kernel }}</p>
-            <p class="cg-panel-line">{{ copy.hero.panel.output }}</p>
-            <div class="cg-outcomes">
-              <span class="cg-outcome success">PROCEED</span>
-              <span class="cg-outcome danger">BLOCK</span>
-              <span class="cg-outcome warning">REQUIRE_ACK</span>
-              <span class="cg-outcome neutral">DEGRADE</span>
-            </div>
+          <aside class="cg-hero-side">
+            <article class="cg-hero-panel">
+              <p class="cg-card-kicker">{{ copy.hero.panel.kicker }}</p>
+              <p class="cg-panel-line">{{ copy.hero.panel.input }}</p>
+              <p class="cg-panel-line">{{ copy.hero.panel.kernel }}</p>
+              <p class="cg-panel-line">{{ copy.hero.panel.output }}</p>
+              <div class="cg-outcomes">
+                <span class="cg-outcome success">PROCEED</span>
+                <span class="cg-outcome danger">BLOCK</span>
+                <span class="cg-outcome warning">REQUIRE_ACK</span>
+                <span class="cg-outcome neutral">DEGRADE</span>
+              </div>
+            </article>
+
+            <article class="cg-side-card cg-hero-note">
+              <p class="cg-card-kicker">Editorial Review</p>
+              <h2 class="cg-side-note-title">{{ copy.hero.review.title }}</h2>
+              <p class="cg-card-body">{{ copy.hero.review.body }}</p>
+            </article>
           </aside>
         </div>
       </section>
@@ -494,7 +561,7 @@ watch(
             <p>{{ copy.guarantees.lead }}</p>
           </header>
           <div class="cg-guarantee-grid">
-            <article v-for="item in guarantees" :key="item.title" class="cg-card">
+            <article v-for="item in guarantees" :key="item.title" class="cg-card cg-card-emphasis">
               <p class="cg-card-kicker">{{ copy.guarantees.invariant }}</p>
               <h3 class="cg-card-title">{{ item.title }}</h3>
               <p class="cg-card-body">{{ item.body }}</p>
@@ -510,6 +577,7 @@ watch(
             <h2>{{ copy.docs.title }}</h2>
             <p>{{ copy.docs.body }}</p>
           </header>
+
           <div class="cg-track-grid">
             <article v-for="item in trackMetrics" :key="item.track" class="cg-card cg-track-card">
               <p class="cg-card-kicker">{{ localizeTrack(item.track) }}</p>
@@ -517,6 +585,7 @@ watch(
               <p class="cg-card-body">{{ copy.docs.trackSummary }}</p>
             </article>
           </div>
+
           <div class="cg-doc-grid">
             <article v-for="doc in featuredDocs" :key="doc.slug" class="cg-card cg-doc-card">
               <p class="cg-doc-heading">{{ localizeTrack(doc.track) }} / {{ localizeStatus(doc.status) }}</p>
@@ -527,6 +596,7 @@ watch(
               </RouterLink>
             </article>
           </div>
+
           <div class="cg-action-row cg-doc-actions">
             <RouterLink class="cg-btn cg-btn-primary" :to="{ name: 'doc', params: { locale: activeLocale } }">
               {{ copy.docs.all }}
@@ -541,6 +611,7 @@ watch(
           <header class="cg-section-head">
             <p class="cg-eyebrow">{{ copy.market.eyebrow }}</p>
             <h2>{{ copy.market.title }}</h2>
+            <p>{{ copy.market.body }}</p>
           </header>
           <div class="cg-business-grid">
             <article v-for="doc in businessDocs" :key="doc.slug" class="cg-card cg-business-card">
@@ -573,14 +644,26 @@ watch(
       </section>
 
       <section class="cg-section reveal fade-up">
-        <div class="cg-container cg-readiness-wrap">
-          <header class="cg-section-head">
-            <p class="cg-eyebrow">{{ copy.readiness.eyebrow }}</p>
-            <h2>{{ copy.readiness.title }}</h2>
-          </header>
-          <ul class="cg-checklist">
-            <li v-for="item in launchChecklist" :key="item">{{ item }}</li>
-          </ul>
+        <div class="cg-container cg-readiness-layout">
+          <div class="cg-readiness-wrap">
+            <header class="cg-section-head">
+              <p class="cg-eyebrow">{{ copy.readiness.eyebrow }}</p>
+              <h2>{{ copy.readiness.title }}</h2>
+            </header>
+            <ul class="cg-checklist">
+              <li v-for="item in launchChecklist" :key="item">{{ item }}</li>
+            </ul>
+          </div>
+
+          <aside class="cg-side-card cg-readiness-panel">
+            <p class="cg-card-kicker">{{ copy.readiness.panelTitle }}</p>
+            <div class="cg-signal-list">
+              <div v-for="item in readinessSignals" :key="item.label" class="cg-signal-row">
+                <span class="cg-signal-label">{{ item.label }}</span>
+                <strong class="cg-signal-value">{{ item.value }}</strong>
+              </div>
+            </div>
+          </aside>
         </div>
       </section>
 
@@ -611,10 +694,12 @@ watch(
               :key="item.q"
               class="cg-card cg-faq-item"
               :class="{ active: activeFaq === idx }"
-              @click="activeFaq = idx"
             >
-              <h3 class="cg-faq-q">{{ item.q }}</h3>
-              <p class="cg-card-body">{{ item.a }}</p>
+              <button class="cg-faq-trigger" type="button" @click="activeFaq = activeFaq === idx ? -1 : idx">
+                <span class="cg-faq-q">{{ item.q }}</span>
+                <span class="cg-faq-icon">{{ activeFaq === idx ? '−' : '+' }}</span>
+              </button>
+              <p v-if="activeFaq === idx" class="cg-card-body">{{ item.a }}</p>
             </article>
           </div>
         </div>

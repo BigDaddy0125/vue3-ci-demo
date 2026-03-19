@@ -98,6 +98,7 @@ const sectionsWithId = computed(() =>
   activeDoc.value.sections.map((section, index) => ({
     ...section,
     id: headingToId(section.heading, index),
+    index: `${index + 1}`.padStart(2, '0'),
   })),
 )
 
@@ -112,11 +113,15 @@ const docDescription = computed(() => {
   return lines.join(' ').slice(0, 170)
 })
 
+const docLead = computed(() => activeDoc.value.sections[0]?.body?.[0] || activeDoc.value.summary)
+const docSupport = computed(() => activeDoc.value.sections[1]?.body?.[0] || activeDoc.value.sections[0]?.body?.[1] || activeDoc.value.summary)
+const folio = computed(() => `/${activeLocale.value}/docs/${activeSlug.value}`)
+
 const localizeTrack = (track) => {
   if (activeLocale.value !== 'ja') return track
   return {
     All: 'すべて',
-    Core: '中核',
+    Core: 'コア',
     Engineering: '技術',
     Operations: '運用',
     Business: '事業',
@@ -165,40 +170,42 @@ const copy = computed(() => {
   if (activeLocale.value === 'ja') {
     return {
       home: 'ホーム',
-      docs: '文書',
-      badge: 'ドキュメントハブ',
-      intro: '技術・運用・事業ドキュメントを同一モデルで検索し、導入判断に使える形で提示します。',
-      searchLabel: 'ドキュメント検索',
-      searchPlaceholder: 'タイトル・slug・要約で検索',
+      docs: '資料',
+      lang: '日本語',
+      badge: 'Editorial Reader',
+      intro: '技術・運用・事業資料を、出版物のような版面で読むためのビューです。',
+      searchLabel: '資料を検索',
+      searchPlaceholder: 'タイトル、slug、要約で検索',
       filterLabel: 'トラックで絞り込み',
-      noResults: '一致するドキュメントがありません。',
-      document: 'ドキュメント',
+      noResults: '条件に一致する資料はありません。',
+      document: 'Document',
       minutesRead: '分で読めます',
       minuteShort: '分',
       sections: 'セクション',
-      lines: '行',
-      outline: 'セクション一覧',
-      sourceTitle: '正本ソース',
-      sourceBody: '原本は Notion の ClearanceGate Documentation です。このサイトは公開運用向けビューです。',
-      sourceCta: 'Notion 正本を開く',
-      metadata: 'ドキュメント情報',
-      metaLabels: {
-        track: 'トラック',
-        status: 'ステータス',
-        audience: '対象読者',
-        confidentiality: '公開範囲',
-        updatedAt: '最終更新',
-      },
-      related: '関連ドキュメント',
-      startPilot: 'この文書セットからパイロットを開始',
+      lines: '本文行',
+      outline: '目次',
+      sourceTitle: '原本',
+      sourceBody: '正本は Notion 上の ClearanceGate Documentation です。このビューは、読む順序と紙面の落ち着きを優先して再構成しています。',
+      sourceCta: 'Notion 原本を開く',
+      metadata: '文書メタデータ',
+      summaryTitle: '先に掴むべき主張',
+      summaryNote: '本文に入る前に、文書の主張と補助線を明確にします。',
+      issueTitle: '読む前の要約',
+      issueBody: 'この文書はプロダクト説明ではなく、判断材料として読まれる前提で組んでいます。',
+      deckLabel: 'Deck',
+      folioLabel: 'Folio',
+      sectionsLabel: 'Sections',
+      related: '関連資料',
+      startPilot: 'この資料群からパイロットを始める',
     }
   }
 
   return {
     home: 'Home',
     docs: 'Docs',
-    badge: 'Documentation Hub',
-    intro: 'Search, compare, and operationalize engineering, governance, and business documentation from one source model.',
+    lang: 'Japanese',
+    badge: 'Editorial Reader',
+    intro: 'An editorial reading view for engineering, operations, and business materials.',
     searchLabel: 'Search docs',
     searchPlaceholder: 'Search by title, slug, or summary',
     filterLabel: 'Track Filter',
@@ -210,16 +217,16 @@ const copy = computed(() => {
     lines: 'lines',
     outline: 'Section Outline',
     sourceTitle: 'Source Of Truth',
-    sourceBody: 'The canonical source remains the Notion-based ClearanceGate Documentation. This site provides a release-ready public surface.',
+    sourceBody: 'The canonical source remains the Notion-based ClearanceGate Documentation. This view prioritizes reading order and calm page rhythm.',
     sourceCta: 'Open Notion Source',
     metadata: 'Document Metadata',
-    metaLabels: {
-      track: 'Track',
-      status: 'Status',
-      audience: 'Audience',
-      confidentiality: 'Confidentiality',
-      updatedAt: 'Last Updated',
-    },
+    summaryTitle: 'Argument at a glance',
+    summaryNote: 'The page surfaces the thesis before detail, more like an editorial spread than an app panel.',
+    issueTitle: 'Reading note',
+    issueBody: 'This document is presented as a decision artifact, not a dashboard record.',
+    deckLabel: 'Deck',
+    folioLabel: 'Folio',
+    sectionsLabel: 'Sections',
     related: 'Related Documents',
     startPilot: 'Start Pilot From This Doc Set',
   }
@@ -247,13 +254,13 @@ watch(
         <RouterLink class="cg-nav-btn-link active" :to="{ name: 'doc', params: { locale: activeLocale } }">{{ copy.docs }}</RouterLink>
         <div class="cg-lang-switch" role="group" aria-label="Language">
           <button class="cg-lang-btn" :class="{ active: activeLocale === 'en' }" @click="switchLocale('en')">EN</button>
-          <button class="cg-lang-btn" :class="{ active: activeLocale === 'ja' }" @click="switchLocale('ja')">日本語</button>
+          <button class="cg-lang-btn" :class="{ active: activeLocale === 'ja' }" @click="switchLocale('ja')">{{ copy.lang }}</button>
         </div>
       </nav>
     </header>
 
-    <main class="cg-docs-shell">
-      <aside class="cg-docs-nav-panel reveal fade-up">
+    <main class="cg-docs-shell cg-docs-shell-editorial">
+      <aside class="cg-docs-nav-panel cg-docs-nav-panel-editorial reveal fade-up">
         <p class="cg-badge">{{ copy.badge }}</p>
         <p class="cg-docs-intro">{{ copy.intro }}</p>
 
@@ -291,12 +298,34 @@ watch(
         </nav>
       </aside>
 
-      <article class="cg-docs-article reveal fade-up">
-        <header class="cg-doc-header">
-          <p class="cg-card-kicker">{{ copy.document }}</p>
+      <article class="cg-docs-article cg-docs-article-editorial reveal fade-up">
+        <header class="cg-doc-header cg-doc-header-editorial">
+          <div class="cg-doc-folio-row">
+            <p class="cg-card-kicker">{{ copy.document }}</p>
+            <p class="cg-doc-folio">
+              <span>{{ copy.folioLabel }}</span>
+              <span>{{ folio }}</span>
+            </p>
+          </div>
+
           <h1>{{ activeDoc.title }}</h1>
-          <p class="cg-doc-header-copy">{{ activeDoc.summary }}</p>
-          <div class="cg-chip-row">
+          <p class="cg-doc-deck">{{ activeDoc.summary }}</p>
+
+          <div class="cg-doc-summary-grid cg-doc-summary-grid-editorial">
+            <section class="cg-doc-summary-card cg-doc-summary-card-editorial">
+              <p class="cg-card-kicker">{{ copy.summaryTitle }}</p>
+              <p class="cg-doc-summary-lead cg-doc-summary-lead-editorial">{{ docLead }}</p>
+              <p class="cg-card-body">{{ docSupport }}</p>
+            </section>
+
+            <aside class="cg-doc-issue-note">
+              <p class="cg-card-kicker">{{ copy.issueTitle }}</p>
+              <p class="cg-card-body">{{ copy.issueBody }}</p>
+              <p class="cg-doc-summary-note">{{ copy.summaryNote }}</p>
+            </aside>
+          </div>
+
+          <div class="cg-doc-meta-rail">
             <span class="cg-chip">{{ localizeTrack(activeDoc.track) }}</span>
             <span class="cg-chip">{{ localizeStatus(activeDoc.status) }}</span>
             <span class="cg-chip">{{ activeStats.minutes }} {{ copy.minutesRead }}</span>
@@ -305,9 +334,19 @@ watch(
           </div>
         </header>
 
-        <section v-for="section in sectionsWithId" :id="section.id" :key="section.id" class="cg-doc-section">
-          <h2>{{ section.heading }}</h2>
-          <p v-for="line in section.body" :key="line">{{ line }}</p>
+        <section
+          v-for="section in sectionsWithId"
+          :id="section.id"
+          :key="section.id"
+          class="cg-doc-section cg-doc-section-editorial"
+        >
+          <div class="cg-doc-section-shell">
+            <div class="cg-doc-section-index">{{ section.index }}</div>
+            <div class="cg-doc-section-body">
+              <h2>{{ section.heading }}</h2>
+              <p v-for="line in section.body" :key="line">{{ line }}</p>
+            </div>
+          </div>
         </section>
 
         <div class="cg-doc-bottom-actions">
@@ -317,47 +356,50 @@ watch(
         </div>
       </article>
 
-      <aside class="cg-docs-side reveal fade-up">
-        <section class="cg-side-card">
+      <aside class="cg-docs-side cg-docs-side-editorial reveal fade-up">
+        <section class="cg-side-card cg-side-card-editorial">
           <h2>{{ copy.metadata }}</h2>
           <dl class="cg-meta-list">
             <div class="cg-meta-item">
-              <dt>{{ copy.metaLabels.track }}</dt>
+              <dt>Track</dt>
               <dd>{{ localizeTrack(activeDoc.track) }}</dd>
             </div>
             <div class="cg-meta-item">
-              <dt>{{ copy.metaLabels.status }}</dt>
+              <dt>Status</dt>
               <dd>{{ localizeStatus(activeDoc.status) }}</dd>
             </div>
             <div class="cg-meta-item">
-              <dt>{{ copy.metaLabels.audience }}</dt>
+              <dt>Audience</dt>
               <dd>{{ activeDoc.audience.map(localizeAudience).join(', ') }}</dd>
             </div>
             <div class="cg-meta-item">
-              <dt>{{ copy.metaLabels.confidentiality }}</dt>
+              <dt>Scope</dt>
               <dd>{{ localizeConfidentiality(activeDoc.confidentiality) }}</dd>
             </div>
             <div class="cg-meta-item">
-              <dt>{{ copy.metaLabels.updatedAt }}</dt>
+              <dt>Updated</dt>
               <dd>{{ activeDoc.lastUpdated }}</dd>
             </div>
           </dl>
         </section>
 
-        <section class="cg-side-card">
+        <section class="cg-side-card cg-side-card-editorial">
           <h2>{{ copy.outline }}</h2>
           <nav class="cg-toc">
-            <a v-for="section in sectionsWithId" :key="section.id" :href="`#${section.id}`">{{ section.heading }}</a>
+            <a v-for="section in sectionsWithId" :key="section.id" :href="`#${section.id}`">
+              <span class="cg-toc-no">{{ section.index }}</span>
+              <span>{{ section.heading }}</span>
+            </a>
           </nav>
         </section>
 
-        <section class="cg-side-card">
+        <section class="cg-side-card cg-side-card-editorial">
           <h2>{{ copy.sourceTitle }}</h2>
           <p>{{ copy.sourceBody }}</p>
           <a class="cg-btn cg-btn-secondary" :href="activeDoc.source || NOTION_DOC_URL" target="_blank" rel="noopener noreferrer">{{ copy.sourceCta }}</a>
         </section>
 
-        <section class="cg-side-card">
+        <section class="cg-side-card cg-side-card-editorial">
           <h2>{{ copy.related }}</h2>
           <div class="cg-related-docs">
             <RouterLink

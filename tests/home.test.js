@@ -39,8 +39,7 @@ describe('Home page', () => {
     })
 
     expect(wrapper.text()).toContain('パイロットを開始')
-    expect(wrapper.text()).toContain('公開文書')
-    expect(wrapper.text()).toContain('石竹株式会社のサイトへ')
+    expect(wrapper.text()).toContain('公開ドキュメント')
+    expect(wrapper.text()).toContain('Ishitake のコーポレートサイトへ')
   })
 })
-
